@@ -1,0 +1,66 @@
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.sdf
+*.opensdf
+*.VC.db
+*.VC.opendb
+/packages/
+
+# Data
+input/*
+output/*
+
+# Python
+SignalForge_Bench/.venv/
+SignalForge_Bench/__pycache__/
+SignalForge_Bench/**/__pycache__/
+SignalForge_Bench/**/*.pyc
+SignalForge_Bench/**/*.pyo
+
+# Benchmark
+SignalForge_Bench/.coverage
+SignalForge_Bench/*.csv
+# Benchmark staging folders
+staging/
+signed_staging/
+
+
+# Build output
+x64/
+x86/
+Debug/
+Release/
+out/
+
+# CMake
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+build/
+
+# CUDA
+*.cubin
+*.fatbin
+*.ptx
+
+# Object files
+*.obj
+*.pdb
+*.ilk
+*.exp
+*.lib
+*.dll
+*.exe
+
+# Nsight
+*.nsight
+*.nvvp
+*.qdrep
+*.sqlite
+
+# Google Test
+googletest/
+googlemock/
+_deps/

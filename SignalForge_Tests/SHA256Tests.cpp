@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "cpu\SignalForge.h"
+#include "cpu/SignalForge.h"
 #include <filesystem>
 
 TEST(SHA256Tests, AllZeros_64bytes)

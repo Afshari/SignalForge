@@ -44,12 +44,18 @@ protected:
 // Test 1: No args - defaults to current path, hash mode
 TEST_F(CLParserTest, NoArgs_DefaultsToExePathAndHashMode)
 {
-    // Simulate real executable path with full path
-    char* argv[] = { (char*)"D:\\some\\path\\SignalForge.exe" };
-    auto parser = SignalForge::CLParser::Parse(1, argv);
+        #ifdef _WIN32
+        char* argv[] = { (char*)"D:\\some\\path\\SignalForge.exe" };
+        auto parser = SignalForge::CLParser::Parse(1, argv);
+        EXPECT_EQ(parser.GetConfigDir(), fs::path("D:\\some\\path"));
+    #else
+        char* argv[] = { (char*)"/usr/local/bin/SignalForge" };
+        auto parser = SignalForge::CLParser::Parse(1, argv);
+        EXPECT_EQ(parser.GetConfigDir(), fs::path("/usr/local/bin"));
+    #endif
 
     EXPECT_FALSE(parser.IsProfileMode());
-    EXPECT_EQ(parser.GetConfigDir(), fs::path("D:\\some\\path"));
+
 }
 
 TEST_F(CLParserTest, NoArgs_NoDirectory_ConfigDirIsEmpty)
@@ -92,7 +98,7 @@ TEST_F(CLParserTest, ConfigDirAndProfileFlag_BothParsedCorrectly)
     EXPECT_EQ(parser.GetConfigDir(), fs::path(dir));
 }
 
-// Test 5: --profile before --config — order doesn't matter
+// Test 5: --profile before --config order doesn't matter
 TEST_F(CLParserTest, ProfileFlagBeforeConfigDir_OrderDoesNotMatter)
 {
     std::string dir = temp_dir.string();
@@ -103,7 +109,7 @@ TEST_F(CLParserTest, ProfileFlagBeforeConfigDir_OrderDoesNotMatter)
     EXPECT_EQ(parser.GetConfigDir(), fs::path(dir));
 }
 
-// Test 6: Unknown argument does not crash — just warns
+// Test 6: Unknown argument does not crash just warns
 TEST_F(CLParserTest, UnknownArg_DoesNotCrash)
 {
     char* argv[] = { (char*)"SignalForge.exe", (char*)"--unknown" };

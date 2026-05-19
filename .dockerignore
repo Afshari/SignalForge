@@ -2,7 +2,6 @@
 .git/
 build/
 x64/
-SignalForge_Tests/test_data/
 SignalForge_Bench/results/
 **/__pycache__/
 **/.venv/

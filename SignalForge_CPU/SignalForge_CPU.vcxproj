@@ -19,10 +19,12 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\CLParser.cpp" />
     <ClCompile Include="src\Config.cpp" />
     <ClCompile Include="src\WavReader.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="inc\CLParser.h" />
     <ClInclude Include="inc\Config.h" />
     <ClInclude Include="inc\WavReader.h" />
   </ItemGroup>
@@ -140,6 +142,7 @@
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>$(ProjectDir)inc;$(BOOST_ROOT);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>

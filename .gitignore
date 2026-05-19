@@ -20,6 +20,7 @@ SignalForge_Bench/**/*.pyc
 SignalForge_Bench/**/*.pyo
 SignalForge_Bench/.coverage
 SignalForge_Bench/*.csv
+SignalForge_Bench/results/
 SignalForge_Tools/.venv/
 SignalForge_Tools/__pycache__/
 SignalForge_Tools/*.pyc
@@ -27,7 +28,6 @@ SignalForge_Tools/*.pyc
 # Python - pytest / coverage
 SignalForge_Tools/.coverage
 SignalForge_Tools/.pytest_cache/
-SignalForge_Tools/__pycache__/
 SignalForge_Tools/tests/__pycache__/
 **/*.pyc
 **/*.pyo

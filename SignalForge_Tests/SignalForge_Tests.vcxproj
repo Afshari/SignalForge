@@ -67,7 +67,8 @@
       <AdditionalDependencies>cudart.lib;libboost_json-vc143-mt-gd-x64-1_91.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /Y "$(SolutionDir)config.json" "$(OutDir)"</Command>
+      <Command>xcopy /Y "$(SolutionDir)config.json" "$(OutDir)"
+xcopy /Y /I /E "$(SolutionDir)SignalForge_Tests\test_data" "$(OutDir)test_data"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -106,7 +107,8 @@
       <AdditionalDependencies>cudart.lib;libboost_json-vc143-mt-x64-1_91.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /Y "$(SolutionDir)config.json" "$(OutDir)"</Command>
+      <Command>xcopy /Y "$(SolutionDir)config.json" "$(OutDir)"
+xcopy /Y /I /E "$(SolutionDir)SignalForge_Tests\test_data" "$(OutDir)test_data"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>

@@ -15,7 +15,7 @@
         "**/build": true,
         "**/staging": true,
         "**/packages": true,
-        "**/test_data": true
+        "**/test_data": false
     },
     "search.exclude": {
         "**/.vs": true,

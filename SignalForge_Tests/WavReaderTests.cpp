@@ -248,7 +248,7 @@ TEST(WavReaderTests, ReadPCM_CalledTwiceReturnsSameData)
 // WavReaderTests - Real generated files (from SignalForge_Tools)
 // These tests require generate_signals.py to have been run first
 // ================================================================================
-TEST(WavReaderTests, DISABLED_ReadGeneratedFile_Clean_500kb)
+TEST(WavReaderTests, ReadGeneratedFile_Clean_500kb)
 {
     auto path = TestDataPath("engine_clean_500kb_001.wav");
 
@@ -265,7 +265,7 @@ TEST(WavReaderTests, DISABLED_ReadGeneratedFile_Clean_500kb)
     EXPECT_LT(pcm.size(), 510u * 1024u);
 }
 
-TEST(WavReaderTests, DISABLED_ReadGeneratedFile_Noisy_1024kb)
+TEST(WavReaderTests, ReadGeneratedFile_Noisy_1024kb)
 {
     auto path = TestDataPath("engine_noisy_1024kb_001.wav");
 

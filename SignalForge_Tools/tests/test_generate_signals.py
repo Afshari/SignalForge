@@ -20,7 +20,7 @@ from generate_signals import (
     generate_anomaly_signal,
     signal_to_pcm16,
     write_wav,
-    generate_expected_hash,
+    compute_sha256,
     load_params,
 )
 

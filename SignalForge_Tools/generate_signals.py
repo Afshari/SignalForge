@@ -1,15 +1,11 @@
+import hashlib
 import json
-import os
 import numpy as np
 import wave
-import struct
 from pathlib import Path
 
-# --------------------------------------------------------------------------------
-# generate_signals.py
 # SignalForge_Tools - Synthetic engine sound generator
 # Reads parameters from tools_params.json and generates .wav test files
-# --------------------------------------------------------------------------------
 
 PARAMS_FILE = "tools_params.json"
 
@@ -142,18 +138,11 @@ def write_wav(output_path: Path, pcm_bytes: bytes, sample_rate: int) -> None:
 
 
 # --------------------------------------------------------------------------------
-def generate_expected_hash(output_path: Path) -> None:
-    """
-    Compute SHA-256 of the raw PCM data (skipping 44-byte WAV header).
-    Print the expected hash so it can be hardcoded in C++ unit tests.
-    """
-    import hashlib
+def compute_sha256(output_path: Path) -> str:
     with open(output_path, "rb") as f:
         f.read(44)  # skip WAV header
         raw_pcm = f.read()
-
-    sha256 = hashlib.sha256(raw_pcm).hexdigest()
-    print(f"  SHA-256 (PCM only): {sha256}")
+    return hashlib.sha256(raw_pcm).hexdigest()
 
 
 # --------------------------------------------------------------------------------
@@ -185,6 +174,8 @@ def main():
         "anomaly": generate_anomaly_signal,
     }
 
+    all_hashes = {}
+
     for entry in signals:
         signal_type = entry["type"]
         size_kb     = entry["size_kb"]
@@ -196,20 +187,28 @@ def main():
 
         print(f"Generating {count}x {signal_type} signal(s) at ~{size_kb} KB:")
 
-        generator = generators[signal_type]
+        generator   = generators[signal_type]
         num_samples = compute_num_samples(size_kb, sample_rate)
 
         for i in range(1, count + 1):
-            filename = f"engine_{signal_type}_{size_kb}kb_{i:03d}.wav"
+            filename    = f"engine_{signal_type}_{size_kb}kb_{i:03d}.wav"
             output_path = output_dir / filename
 
-            signal = generator(num_samples, sample_rate)
+            signal    = generator(num_samples, sample_rate)
             pcm_bytes = signal_to_pcm16(signal)
             write_wav(output_path, pcm_bytes, sample_rate)
-            generate_expected_hash(output_path)
+
+            sha256 = compute_sha256(output_path)
+            all_hashes[filename] = sha256
+            print(f"  SHA-256: {sha256}")
 
         print()
 
+    # Save all hashes to JSON
+    hashes_path = output_dir / "test_data_hashes.json"
+    with open(hashes_path, "w") as f:
+        json.dump(all_hashes, f, indent=4)
+    print(f"Hashes saved to: {hashes_path}")
     print("Done.")
 
 

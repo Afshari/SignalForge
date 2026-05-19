@@ -1,0 +1,36 @@
+{
+    "python.defaultInterpreterPath": "${workspaceFolder}/SignalForge_Tools/.venv/Scripts/python.exe",
+    "python.testing.pytestEnabled": true,
+    "python.testing.pytestArgs": [
+        "tests",
+        "--cov=.",
+        "--cov-report=term-missing",
+        "-v"
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.cwd": "${workspaceFolder}/SignalForge_Tools",
+    "files.exclude": {
+        "**/.vs": true,
+        "**/x64": true,
+        "**/build": true,
+        "**/staging": true,
+        "**/packages": true,
+        "**/test_data": false
+    },
+    "search.exclude": {
+        "**/.vs": true,
+        "**/x64": true,
+        "**/build": true,
+        "**/staging": true,
+        "**/packages": true,
+        "**/test_data": true
+    },
+    "files.watcherExclude": {
+        "**/.vs/**": true,
+        "**/x64/**": true,
+        "**/build/**": true,
+        "**/staging/**": true,
+        "**/packages/**": true,
+        "**/test_data/**": true
+    }
+}

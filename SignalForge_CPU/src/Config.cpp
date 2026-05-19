@@ -1,4 +1,49 @@
 #include "Config.h"
+#include <boost/json.hpp>
 #include <fstream>
 #include <sstream>
 #include <stdexcept>
+
+namespace json = boost::json;
+
+namespace SignalForge {
+
+    Config Config::Load(const std::filesystem::path& filepath)
+    {
+        std::ifstream file(filepath);
+        if (!file.is_open())
+            throw std::runtime_error("Config file not found: " + filepath.string());
+
+        std::stringstream buffer;
+        buffer << file.rdbuf();
+
+        json::value root = json::parse(buffer.str());
+
+        Config config;
+        config.max_file_size_kb = root.at("file").at("max_file_size_kb").as_int64();
+        config.sample_rate = root.at("file").at("sample_rate").as_int64();
+        config.batch_size = root.at("batch").at("batch_size").as_int64();
+        config.threads_per_block = root.at("gpu").at("threads_per_block").as_int64();
+        config.fft_size = root.at("gpu").at("fft_size").as_int64();
+        config.test_data_dir = root.at("paths").at("test_data_dir").as_string().c_str();
+        config.output_dir = root.at("paths").at("output_dir").as_string().c_str();
+        config.input_dir = root.at("paths").at("input_dir").as_string().c_str();
+
+        return config;
+    }
+
+    Config Config::Default()
+    {
+        Config config;
+        config.max_file_size_kb = 2048;
+        config.sample_rate = 44100;
+        config.batch_size = 10;
+        config.threads_per_block = 32;
+        config.fft_size = 65536;
+        config.test_data_dir = "test_data";
+        config.output_dir = "output";
+        config.input_dir = "input";
+        return config;
+    }
+
+} // namespace SignalForge

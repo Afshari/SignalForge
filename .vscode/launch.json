@@ -1,0 +1,13 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Generate Signals",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/SignalForge_Tools/generate_signals.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}/SignalForge_Tools"
+        }
+    ]
+}

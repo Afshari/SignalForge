@@ -32,9 +32,6 @@ SignalForge_Tools/tests/__pycache__/
 **/*.pyc
 **/*.pyo
 
-# Test data
-SignalForge_Tests/test_data/
-
 # Benchmark staging folders
 staging/
 signed_staging/

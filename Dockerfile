@@ -21,6 +21,10 @@ RUN wget https://archives.boost.io/release/1.91.0/source/boost_1_91_0.tar.gz && 
     cd .. && \
     rm -rf boost_1_91_0 boost_1_91_0.tar.gz
 
+# Copy requirements and install
+COPY requirements.txt .
+RUN pip3 install -r requirements.txt
+
 # Copy source
 WORKDIR /app
 COPY . .

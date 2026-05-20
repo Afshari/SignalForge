@@ -25,9 +25,11 @@ protected:
     {
         std::ofstream f(temp_dir / "config.json");
         f << "{\n"
-            << "  \"file\":  { \"max_file_size_kb\": 2048, \"sample_rate\": 44100 },\n"
-            << "  \"batch\": { \"batch_size\": 10 },\n"
-            << "  \"gpu\":   { \"threads_per_block\": 32, \"fft_size\": 65536 },\n"
+            << "  \"file\": { \"max_file_size_kb\": 2048, \"sample_rate\": 44100 },\n"
+            << "  \"kernels\": {\n"
+            << "    \"sha256\": { \"batch_size\": 5120, \"threads_per_block\": 128 },\n"
+            << "    \"fft\":    { \"batch_size\": 1024, \"threads_per_block\": 256, \"fft_size\": 65536 }\n"
+            << "  },\n"
             << "  \"paths\": {\n"
             << "    \"test_data_dir\": \"test_data\",\n"
             << "    \"output_dir\":    \"output\",\n"
@@ -125,9 +127,9 @@ TEST_F(CLParserTest, MissingConfigJson_ReturnsDefaults)
 {
     auto config = SignalForge::CLParser::LoadConfig(temp_dir);
 
-    EXPECT_EQ(config.threads_per_block, 32u);
+    EXPECT_EQ(config.sha256.threads_per_block, 128u);
+    EXPECT_EQ(config.sha256.batch_size, 5120u);
     EXPECT_EQ(config.sample_rate, 44100u);
-    EXPECT_EQ(config.batch_size, 10u);
 }
 
 // Test 8: Valid config.json loads correctly
@@ -138,8 +140,10 @@ TEST_F(CLParserTest, ValidConfigJson_LoadsCorrectly)
 
     EXPECT_EQ(config.max_file_size_kb, 2048u);
     EXPECT_EQ(config.sample_rate, 44100u);
-    EXPECT_EQ(config.batch_size, 10u);
-    EXPECT_EQ(config.threads_per_block, 32u);
+    EXPECT_EQ(config.sha256.batch_size, 5120u);
+    EXPECT_EQ(config.sha256.threads_per_block, 128u);
+    EXPECT_EQ(config.fft.batch_size, 1024u);
+    EXPECT_EQ(config.fft.threads_per_block, 256u);
     EXPECT_EQ(config.fft_size, 65536u);
 }
 

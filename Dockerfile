@@ -10,6 +10,7 @@ RUN apt-get update && apt-get install -y \
     wget \
     python3 \
     python3-pip \
+    vim \
     && rm -rf /var/lib/apt/lists/*
 
 # Boost 1.91 from source — Boost.JSON only

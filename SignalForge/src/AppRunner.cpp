@@ -113,7 +113,7 @@ namespace SignalForge {
         std::vector<double>      durations;
 
         // Process in batches
-        size_t batchSize = config.batch_size;
+        size_t batchSize = config.sha256.batch_size;
         for (size_t start = 0; start < files.size(); start += batchSize)
         {
             size_t end = std::min(start + batchSize, files.size());
@@ -129,7 +129,7 @@ namespace SignalForge {
             std::vector<uint64_t> batchHashes(count * 4, 0);
 
             auto t0 = std::chrono::high_resolution_clock::now();
-            SHA256BatchWrapper_CPU(inputs, batchHashes.data(), count, config.threads_per_block);
+            SHA256BatchWrapper_CPU(inputs, batchHashes.data(), count, config.sha256.threads_per_block);
             auto t1 = std::chrono::high_resolution_clock::now();
 
             double ms = std::chrono::duration<double, std::milli>(t1 - t0).count();
@@ -164,12 +164,12 @@ namespace SignalForge {
 
         std::cout << "[INFO] Profile mode" << std::endl;
         std::cout << "[INFO] Found " << files.size() << " .wav files." << std::endl;
-        std::cout << "[INFO] Batch size: " << config.batch_size << std::endl;
-        std::cout << "[INFO] Threads/block: " << config.threads_per_block << std::endl;
+        std::cout << "[INFO] Batch size: " << config.sha256.batch_size << std::endl;
+        std::cout << "[INFO] Threads/block: " << config.sha256.threads_per_block << std::endl;
 
         std::vector<double> batchDurations;
         double              totalDurationMs = 0.0;
-        size_t              batchSize = config.batch_size;
+        size_t              batchSize = config.sha256.batch_size;
 
         for (size_t start = 0; start < files.size(); start += batchSize)
         {
@@ -186,7 +186,7 @@ namespace SignalForge {
             std::vector<uint64_t> batchHashes(count * 4, 0);
 
             auto t0 = std::chrono::high_resolution_clock::now();
-            SHA256BatchWrapper_CPU(inputs, batchHashes.data(), count, config.threads_per_block);
+            SHA256BatchWrapper_CPU(inputs, batchHashes.data(), count, config.sha256.threads_per_block);
             auto t1 = std::chrono::high_resolution_clock::now();
 
             double ms = std::chrono::duration<double, std::milli>(t1 - t0).count();
@@ -207,7 +207,7 @@ namespace SignalForge {
 
         WriteProfileCsv(
             config.output_dir,
-            config.threads_per_block,
+            config.sha256.threads_per_block,
             static_cast<uint32_t>(batchSize),
             batchDurations,
             files.size(),

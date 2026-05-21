@@ -49,36 +49,31 @@ def run_ncu(
     metrics_str = ",".join(metrics)
     cmd = [
         "ncu",
-        f"--output={ncu_output_path}",
+        "-o", str(ncu_output_path),
         "--force-overwrite",
-        f"--metrics={metrics_str}",
+        "--metrics", metrics_str,
     ] + extra_args.split() + [
         str(executable), "--profile"
     ]
     print(f"  Running: {' '.join(cmd)}")
-    return subprocess.run(cmd, capture_output=True, text=True)
-
+    return subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
 
 # --------------------------------------------------------------------------------
-def parse_ncu_metrics(stdout: str, metrics: list) -> dict:
-    # Parse ncu stdout for metric values
-    # ncu outputs metrics in format: "metric_name   value   unit"
+def parse_ncu_metrics(report_path: Path, metrics: list) -> dict:
     results = {m: -1.0 for m in metrics}
-    for line in stdout.splitlines():
+    cmd = ["ncu", "--import", str(report_path), "--print-summary", "per-kernel"]
+    result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+    
+    for line in result.stdout.splitlines():
         for metric in metrics:
-            # Match short metric name (last part after __)
-            short_name = metric.split("__")[-1] if "__" in metric else metric
-            if short_name in line or metric in line:
+            if metric in line:
                 parts = line.split()
-                for part in parts:
-                    try:
-                        val = float(part.replace(",", "."))
-                        results[metric] = val
-                        break
-                    except ValueError:
-                        continue
+                try:
+                    # Average is the last numeric value on the line
+                    results[metric] = float(parts[-1])
+                except (ValueError, IndexError):
+                    continue
     return results
-
 
 # --------------------------------------------------------------------------------
 def main():
@@ -144,11 +139,12 @@ def main():
 
                     result = run_ncu(ncu_report, executable, metrics, extra_args)
 
-                    status         = "ok" if result.returncode == 0 else "failed"
-                    metric_values  = parse_ncu_metrics(result.stdout, metrics)
+                    status = "ok" if result.returncode == 0 else "failed"
 
-                    # Determine if kernel is memory-bound or compute-bound
-                    # Compare SM throughput vs DRAM throughput
+                    # CHANGED: read metrics from report file instead of stdout
+                    report_file  = Path(str(ncu_report) + ".ncu-rep")
+                    metric_values = parse_ncu_metrics(report_file, metrics)
+
                     sm_pct   = metric_values.get(metrics[0], -1.0)
                     dram_pct = metric_values.get(metrics[3], -1.0)
                     if sm_pct >= 0 and dram_pct >= 0:
@@ -171,11 +167,12 @@ def main():
 
                     if result.returncode != 0:
                         print(f"  WARNING: run failed (exit code {result.returncode})")
-                        print(f"  stderr: {result.stderr[:200]}")
+                        # CHANGED: result.stderr is None since we merged stderr into stdout
+                        print(f"  stdout: {result.stdout[:200] if result.stdout else ''}")
 
                     print(f"  SM={sm_pct:.1f}% DRAM={dram_pct:.1f}% bound={bound} status={status}")
                     print()
-
+                    
     print(f"Sweep complete. Results saved to: {csv_path}")
 
 

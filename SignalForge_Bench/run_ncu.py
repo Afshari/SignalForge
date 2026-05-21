@@ -34,11 +34,10 @@ def resolve_path(script_dir: Path, rel_path: str) -> Path:
 def update_config(config_path: Path, threads_per_block: int, batch_size: int) -> None:
     with open(config_path, "r") as f:
         config = json.load(f)
-    config["gpu"]["threads_per_block"] = threads_per_block
-    config["batch"]["batch_size"]      = batch_size
+    config["kernels"]["sha256"]["threads_per_block"] = threads_per_block
+    config["kernels"]["sha256"]["batch_size"]        = batch_size
     with open(config_path, "w") as f:
         json.dump(config, f, indent=4)
-
 
 # --------------------------------------------------------------------------------
 def run_ncu(

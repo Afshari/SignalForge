@@ -157,3 +157,44 @@ TEST_F(CLParserTest, LoadConfig_ReadsFromCorrectDirectory)
     EXPECT_EQ(config.output_dir, fs::weakly_canonical(temp_dir / "output"));
     EXPECT_EQ(config.input_dir, fs::weakly_canonical(temp_dir / "input"));
 }
+
+// ================================================================================
+// CLParserTests - FFT mode
+// ================================================================================
+
+TEST_F(CLParserTest, FftFlag_SetsFftMode)
+{
+    char* argv[] = { (char*)"SignalForge.exe", (char*)"--fft" };
+    auto parser = SignalForge::CLParser::Parse(2, argv);
+
+    EXPECT_TRUE(parser.IsFftMode());
+    EXPECT_FALSE(parser.IsProfileMode());
+}
+
+TEST_F(CLParserTest, FftFlag_AndConfigDir_BothParsedCorrectly)
+{
+    std::string dir = temp_dir.string();
+    char* argv[] = { (char*)"SignalForge.exe", (char*)"--fft", (char*)"--config", (char*)dir.c_str() };
+    auto parser = SignalForge::CLParser::Parse(4, argv);
+
+    EXPECT_TRUE(parser.IsFftMode());
+    EXPECT_FALSE(parser.IsProfileMode());
+    EXPECT_EQ(parser.GetConfigDir(), fs::path(dir));
+}
+
+TEST_F(CLParserTest, NoFftFlag_FftModeIsFalse)
+{
+    char* argv[] = { (char*)"SignalForge.exe" };
+    auto parser = SignalForge::CLParser::Parse(1, argv);
+
+    EXPECT_FALSE(parser.IsFftMode());
+}
+
+TEST_F(CLParserTest, ProfileAndFft_AreIndependent)
+{
+    char* argv[] = { (char*)"SignalForge.exe", (char*)"--profile", (char*)"--fft" };
+    auto parser = SignalForge::CLParser::Parse(3, argv);
+
+    EXPECT_TRUE(parser.IsProfileMode());
+    EXPECT_TRUE(parser.IsFftMode());
+}

@@ -28,6 +28,7 @@ target_include_directories(SignalForge_GPU PRIVATE
 
 target_link_libraries(SignalForge_GPU PRIVATE
     CUDA::cudart_static
+    CUDA::cufft
 )
 
 add_custom_command(TARGET SignalForge_GPU POST_BUILD

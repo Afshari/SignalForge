@@ -21,12 +21,18 @@
     <ClCompile Include="src\WavReader.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="src\CLParser.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="inc\Config.h">
       <Filter>inc</Filter>
     </ClInclude>
     <ClInclude Include="inc\WavReader.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\CLParser.h">
       <Filter>inc</Filter>
     </ClInclude>
   </ItemGroup>

@@ -1,0 +1,9 @@
+.vs/
+.git/
+build/
+x64/
+SignalForge_Bench/results/
+**/__pycache__/
+**/.venv/
+*.user
+*.suo

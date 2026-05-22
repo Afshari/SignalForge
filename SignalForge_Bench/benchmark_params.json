@@ -1,0 +1,28 @@
+{
+    "executable": "../x64/Release/SignalForge",
+    "config_file": "../config.json",
+    "test_data_dir": "../SignalForge_Tests/test_data",
+    "results_dir": "results",
+
+    "nsys": {
+        "output_dir": "results/nsys",
+        "extra_args": "--trace=cuda,nvtx --force-overwrite=true"
+    },
+
+    "ncu": {
+        "output_dir": "results/ncu",
+        "metrics": [
+            "sm__throughput.avg.pct_of_peak_sustained_elapsed",
+            "l1tex__throughput.avg.pct_of_peak_sustained_elapsed",
+            "lts__throughput.avg.pct_of_peak_sustained_elapsed",
+            "gpu__dram_throughput.avg.pct_of_peak_sustained_elapsed"
+        ],
+        "extra_args": "--target-processes all"
+    },
+
+    "sweep": {
+        "thread_block_sizes": [32, 64, 128, 256],
+        "file_sizes_kb":      [100, 500, 1024, 2048],
+        "batch_sizes":        [50, 100, 1000, 10000]
+    }
+}

@@ -5,17 +5,21 @@
 
 namespace SignalForge {
 
+    struct KernelConfig
+    {
+        uint32_t batch_size;
+        uint32_t threads_per_block;
+    };
+
     struct Config
     {
         // File settings
         uint64_t                max_file_size_kb;
         uint32_t                sample_rate;
 
-        // Batch settings
-        uint32_t                batch_size;
-
-        // GPU settings
-        uint32_t                threads_per_block;
+        // Per-kernel settings
+        KernelConfig            sha256;
+        KernelConfig            fft;
         uint32_t                fft_size;
 
         // Paths

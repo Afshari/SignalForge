@@ -107,7 +107,7 @@ def main():
     run_index  = 0
 
     # Build CSV headers dynamically from metrics list
-    metric_short_names = [m.split("__")[-1] for m in metrics]
+    metric_short_names = [m.replace(".", "_") for m in metrics]
 
     print(f"SignalForge ncu profiling sweep")
     print(f"Total runs: {total_runs}")

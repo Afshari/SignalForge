@@ -1,6 +1,6 @@
 {
-    "executable": "../x64/Release/SignalForge.exe",
-    "config_file": "../SignalForge/config.json",
+    "executable": "../x64/Release/SignalForge",
+    "config_file": "../config.json",
     "test_data_dir": "../SignalForge_Tests/test_data",
     "results_dir": "results",
 
@@ -17,7 +17,7 @@
             "lts__throughput.avg.pct_of_peak_sustained_elapsed",
             "gpu__dram_throughput.avg.pct_of_peak_sustained_elapsed"
         ],
-        "extra_args": "--set full"
+        "extra_args": "--target-processes all"
     },
 
     "sweep": {

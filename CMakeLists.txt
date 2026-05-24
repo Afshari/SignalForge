@@ -23,6 +23,8 @@ endif()
 message(STATUS "Output directory: ${OUTPUT_DIR}")
 message(STATUS "CUDA architectures: ${CMAKE_CUDA_ARCHITECTURES}")
 
+find_package(hiredis CONFIG REQUIRED)
+
 # Boost — installed from source at /usr/local on Linux
 # On Windows pass -DBOOST_ROOT=... or set BOOST_ROOT env var
 set(Boost_NO_WARN_NEW_VERSIONS 1)

@@ -30,6 +30,7 @@ target_link_libraries(SignalForge PRIVATE
     CUDA::cudart_static
     CUDA::cufft
     Boost::json
+    hiredis::hiredis
 )
 
 add_custom_command(TARGET SignalForge POST_BUILD

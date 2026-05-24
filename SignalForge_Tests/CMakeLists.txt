@@ -43,6 +43,7 @@ target_link_libraries(SignalForge_Tests PRIVATE
     CUDA::cudart_static
     CUDA::cufft
     Boost::json
+    hiredis::hiredis
     gtest
     gtest_main
 )

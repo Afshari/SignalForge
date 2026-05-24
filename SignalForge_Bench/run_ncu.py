@@ -31,29 +31,32 @@ def resolve_path(script_dir: Path, rel_path: str) -> Path:
 
 
 # --------------------------------------------------------------------------------
-def update_config(config_path: Path, threads_per_block: int, batch_size: int) -> None:
+def update_config(config_path: Path, threads_per_block: int, batch_size: int, mode: str) -> None:
     with open(config_path, "r") as f:
         config = json.load(f)
-    config["kernels"]["sha256"]["threads_per_block"] = threads_per_block
-    config["kernels"]["sha256"]["batch_size"]        = batch_size
+    kernel = "fft" if mode == "fft" else "sha256"
+    config["kernels"][kernel]["threads_per_block"] = threads_per_block
+    config["kernels"][kernel]["batch_size"]        = batch_size
     with open(config_path, "w") as f:
         json.dump(config, f, indent=4)
-
+        
 # --------------------------------------------------------------------------------
 def run_ncu(
     ncu_output_path: Path,
     executable: Path,
     metrics: list,
-    extra_args: str
+    extra_args: str,
+    mode: str
 ) -> subprocess.CompletedProcess:
     metrics_str = ",".join(metrics)
+    app_flag = "--fft" if mode == "fft" else "--profile"
     cmd = [
         "ncu",
         "-o", str(ncu_output_path),
         "--force-overwrite",
         "--metrics", metrics_str,
     ] + extra_args.split() + [
-        str(executable), "--profile"
+        str(executable), app_flag
     ]
     print(f"  Running: {' '.join(cmd)}")
     return subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
@@ -91,6 +94,8 @@ def main():
     thread_block_sizes = sweep["thread_block_sizes"]
     file_sizes_kb      = sweep["file_sizes_kb"]
     batch_sizes        = sweep["batch_sizes"]
+    
+    mode = params.get("mode", "sha256")
 
     if not executable.exists():
         print(f"ERROR: executable not found: {executable}")
@@ -133,11 +138,11 @@ def main():
                     run_index += 1
                     print(f"[{run_index}/{total_runs}] threads={threads} size={size_kb}KB batch={batch}")
 
-                    update_config(config_path, threads, batch)
+                    update_config(config_path, threads, batch, mode)
 
                     ncu_report = ncu_out_dir / f"ncu_t{threads}_s{size_kb}kb_b{batch}"
 
-                    result = run_ncu(ncu_report, executable, metrics, extra_args)
+                    result = run_ncu(ncu_report, executable, metrics, extra_args, mode)
 
                     status = "ok" if result.returncode == 0 else "failed"
 

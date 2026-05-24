@@ -1,5 +1,6 @@
 #pragma once
 #include "Config.h"
+#include "RedisClient.h"
 #include <string>
 #include <vector>
 

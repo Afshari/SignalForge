@@ -24,6 +24,9 @@
     <ClCompile Include="src\CLParser.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="src\RedisClient.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="inc\Config.h">
@@ -33,6 +36,9 @@
       <Filter>inc</Filter>
     </ClInclude>
     <ClInclude Include="inc\CLParser.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\RedisClient.h">
       <Filter>inc</Filter>
     </ClInclude>
   </ItemGroup>

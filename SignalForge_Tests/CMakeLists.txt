@@ -10,7 +10,7 @@ set(Boost_NO_WARN_NEW_VERSIONS 1)
 find_package(Boost 1.91 REQUIRED COMPONENTS json)
 link_directories(${Boost_LIBRARY_DIRS})
 
-# GoogleTest — fetched automatically
+# GoogleTest
 include(FetchContent)
 FetchContent_Declare(
     googletest
@@ -25,6 +25,7 @@ set(TEST_SOURCES
     ConfigTests.cpp
     SHA256Tests.cpp
     WavReaderTests.cpp
+    FFTTests.cpp
 )
 
 add_executable(SignalForge_Tests ${TEST_SOURCES})
@@ -40,6 +41,7 @@ target_link_libraries(SignalForge_Tests PRIVATE
     ${OUTPUT_DIR}/libSignalForge_CPU.a
     ${OUTPUT_DIR}/libSignalForge_GPU.a
     CUDA::cudart_static
+    CUDA::cufft
     Boost::json
     gtest
     gtest_main

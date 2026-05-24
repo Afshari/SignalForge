@@ -28,6 +28,7 @@ target_link_libraries(SignalForge PRIVATE
     ${OUTPUT_DIR}/libSignalForge_CPU.a
     ${OUTPUT_DIR}/libSignalForge_GPU.a
     CUDA::cudart_static
+    CUDA::cufft
     Boost::json
 )
 

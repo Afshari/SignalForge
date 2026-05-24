@@ -1,4 +1,5 @@
 #include "gpu/SignalForge.cuh"
+#include <cufft.h>
 
 // --------------------------------------------------------------------------------
 // SHA256HashWrapper - hash any input size (must be multiple of 64 bytes for now)
@@ -221,3 +222,91 @@ void SHA256BatchWrapper_CPU(
     cudaFree(d_hashes);
 }
 
+// --------------------------------------------------------------------------------
+// ComputeMagnitudes - compute magnitude spectrum from complex FFT output
+// Each thread handles one frequency bin of one file
+// Output: fft_size/2 magnitudes per file (only positive frequencies)
+// --------------------------------------------------------------------------------
+__global__ void ComputeMagnitudes(
+    cufftComplex* d_freq,
+    float* d_magnitudes,
+    uint32_t      num_files,
+    uint32_t      fft_size)
+{
+    uint32_t file_idx = blockIdx.x;
+    uint32_t bin_idx = blockIdx.y * blockDim.x + threadIdx.x;
+    uint32_t half = fft_size / 2 + 1;  // R2C output size is fft_size/2 + 1
+
+    if (file_idx >= num_files || bin_idx >= half)
+        return;
+
+    cufftComplex c = d_freq[(uint64_t)file_idx * half + bin_idx];
+    d_magnitudes[(uint64_t)file_idx * half + bin_idx] =
+        sqrtf(c.x * c.x + c.y * c.y) / fft_size;
+}
+
+// --------------------------------------------------------------------------------
+// FFTBatchWrapper_CPU
+// Converts PCM bytes - float - cuFFT - magnitude spectrum
+// Output: h_magnitudes[num_files * fft_size/2]
+// --------------------------------------------------------------------------------
+void FFTBatchWrapper_CPU(
+    std::vector<std::vector<uint8_t>>& h_inputs,
+    float* h_magnitudes,
+    uint32_t  num_files,
+    uint32_t  fft_size,
+    uint32_t  threads_per_block)
+{
+    uint64_t half = fft_size / 2 + 1;  // R2C output size
+
+    float* d_float_flat;
+    cufftComplex* d_freq;
+    float* d_magnitudes;
+
+    cudaMalloc(&d_float_flat, (uint64_t)num_files * fft_size * sizeof(float));
+    cudaMalloc(&d_freq, (uint64_t)num_files * half * sizeof(cufftComplex));
+    cudaMalloc(&d_magnitudes, (uint64_t)num_files * half * sizeof(float));
+
+    cudaMemset(d_float_flat, 0, (uint64_t)num_files * fft_size * sizeof(float));
+
+    // Convert PCM to float on CPU and copy to GPU
+    for (uint32_t i = 0; i < num_files; i++)
+    {
+        const auto& pcm = h_inputs[i];
+        uint32_t num_samples = std::min((uint32_t)(pcm.size() / 2), fft_size);
+
+        std::vector<float> h_float(fft_size, 0.0f);
+        for (uint32_t s = 0; s < num_samples; s++)
+        {
+            int16_t sample = (int16_t)(pcm[s * 2] | (pcm[s * 2 + 1] << 8));
+            h_float[s] = sample / 32768.0f;
+        }
+
+        cudaMemcpy(
+            d_float_flat + (uint64_t)i * fft_size,
+            h_float.data(),
+            fft_size * sizeof(float),
+            cudaMemcpyHostToDevice);
+    }
+
+    // Run cuFFT batch
+    cufftHandle plan;
+    cufftPlan1d(&plan, fft_size, CUFFT_R2C, num_files);
+    cufftExecR2C(plan, d_float_flat, d_freq);
+    cudaDeviceSynchronize();
+    cufftDestroy(plan);
+
+    // Compute magnitudes
+    dim3 grid_mag(num_files, (half + threads_per_block - 1) / threads_per_block);
+    ComputeMagnitudes << <grid_mag, threads_per_block >> > (
+        d_freq, d_magnitudes, num_files, fft_size);
+    cudaDeviceSynchronize();
+
+    cudaMemcpy(h_magnitudes, d_magnitudes,
+        (uint64_t)num_files * half * sizeof(float),
+        cudaMemcpyDeviceToHost);
+
+    cudaFree(d_float_flat);
+    cudaFree(d_freq);
+    cudaFree(d_magnitudes);
+}

@@ -92,6 +92,26 @@ namespace SignalForge {
     }
 
     // --------------------------------------------------------------------------------
+    static void WriteFFTCsv(
+        const std::filesystem::path& outputDir,
+        const std::vector<std::filesystem::path>& files,
+        const std::vector<double>& durationsMs)
+    {
+        std::filesystem::create_directories(outputDir);
+        auto csvPath = outputDir / "fft_results.csv";
+
+        std::ofstream csv(csvPath);
+        csv << "filename,duration_ms,throughput_files_per_sec\n";
+
+        for (size_t i = 0; i < files.size(); i++)
+            csv << files[i].filename().string() << ","
+            << std::fixed << std::setprecision(3) << durationsMs[i] << ","
+            << std::setprecision(1) << (1000.0 / durationsMs[i]) << "\n";
+
+        std::cout << "[INFO] FFT results written to: " << csvPath << std::endl;
+    }
+
+    // --------------------------------------------------------------------------------
     int AppRunner::RunHash(const Config& config)
     {
         if (!std::filesystem::exists(config.input_dir))
@@ -214,6 +234,77 @@ namespace SignalForge {
             totalDurationMs
         );
 
+        return 0;
+    }
+
+    // --------------------------------------------------------------------------------
+    int AppRunner::RunFFT(const Config& config)
+    {
+        if (!std::filesystem::exists(config.input_dir))
+        {
+            std::cerr << "[ERROR] Input directory not found: " << config.input_dir << std::endl;
+            return 1;
+        }
+
+        auto files = ScanWavFiles(config.input_dir);
+        if (files.empty())
+        {
+            std::cout << "[INFO] No .wav files found in: " << config.input_dir << std::endl;
+            return 0;
+        }
+
+        std::cout << "[INFO] FFT mode" << std::endl;
+        std::cout << "[INFO] Found " << files.size() << " .wav files." << std::endl;
+        std::cout << "[INFO] Batch size: " << config.fft.batch_size << std::endl;
+        std::cout << "[INFO] Threads/block: " << config.fft.threads_per_block << std::endl;
+        std::cout << "[INFO] FFT size: " << config.fft_size << std::endl;
+
+        std::vector<double> durations;
+        size_t batchSize = config.fft.batch_size;
+        double totalDurationMs = 0.0;
+        std::vector<double> batchDurations;
+
+        uint32_t half = config.fft_size / 2 + 1;
+
+        for (size_t start = 0; start < files.size(); start += batchSize)
+        {
+            size_t end = std::min(start + batchSize, files.size());
+            std::vector<std::vector<uint8_t>> inputs;
+
+            for (size_t i = start; i < end; i++)
+            {
+                WavReader reader(files[i]);
+                inputs.push_back(reader.ReadPCM());
+            }
+
+            uint32_t count = static_cast<uint32_t>(inputs.size());
+            std::vector<float> magnitudes((uint64_t)count * half, 0.0f);
+
+            auto t0 = std::chrono::high_resolution_clock::now();
+            FFTBatchWrapper_CPU(inputs, magnitudes.data(), count,
+                config.fft_size, config.fft.threads_per_block);
+            auto t1 = std::chrono::high_resolution_clock::now();
+
+            double ms = std::chrono::duration<double, std::milli>(t1 - t0).count();
+            batchDurations.push_back(ms);
+            totalDurationMs += ms;
+
+            for (uint32_t i = 0; i < count; i++)
+                durations.push_back(ms / count);
+
+            std::cout << "[INFO] Batch [" << (start / batchSize + 1) << "]"
+                << " files=" << count
+                << " duration=" << std::fixed << std::setprecision(3) << ms << "ms"
+                << " throughput=" << std::setprecision(1) << (count / (ms / 1000.0)) << " files/sec"
+                << std::endl;
+        }
+
+        std::cout << "[INFO] Total duration: " << std::fixed << std::setprecision(3)
+            << totalDurationMs << "ms" << std::endl;
+        std::cout << "[INFO] Overall throughput: " << std::setprecision(1)
+            << (files.size() / (totalDurationMs / 1000.0)) << " files/sec" << std::endl;
+
+        WriteFFTCsv(config.output_dir, files, durations);
         return 0;
     }
 

@@ -10,6 +10,7 @@ RUN apt-get update && apt-get install -y \
     wget \
     python3 \
     python3-pip \
+    python3-venv \
     vim \
     && rm -rf /var/lib/apt/lists/*
 
@@ -37,6 +38,11 @@ RUN mkdir -p build && cd build && \
         -DCMAKE_CUDA_ARCHITECTURES=75 \
         -DBOOST_ROOT=/usr/local && \
     cmake --build . --config Release -j$(nproc)
+
+# Python venv setup
+RUN cd /app && \
+    python3 -m venv .venv && \
+    .venv/bin/pip install -r requirements.txt
 
 # Entry point
 ENTRYPOINT ["/app/x64/Release/SignalForge"]

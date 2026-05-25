@@ -1,5 +1,6 @@
 #include "AppRunner.h"
 #include "WavReader.h"
+#include "RedisClient.h"
 #include "cpu/SignalForge.h"
 #include <boost/filesystem.hpp>
 #include <chrono>
@@ -129,37 +130,70 @@ namespace SignalForge {
 
         std::cout << "[INFO] Found " << files.size() << " .wav files." << std::endl;
 
+        // --- Connect to Redis ---
+        RedisClient redis;
+        bool redisAvailable = redis.Connect();
+        if (redisAvailable)
+            std::cout << "[INFO] Redis connected - duplicate skipping enabled." << std::endl;
+        else
+            std::cout << "[WARN] Redis not available - processing all files." << std::endl;
+
         std::vector<std::string> hashes;
         std::vector<double>      durations;
+        size_t                   skipped = 0;
 
-        // Process in batches
         size_t batchSize = config.sha256.batch_size;
         for (size_t start = 0; start < files.size(); start += batchSize)
         {
             size_t end = std::min(start + batchSize, files.size());
             std::vector<std::vector<uint8_t>> inputs;
+            std::vector<std::filesystem::path> batchFiles;
 
             for (size_t i = start; i < end; i++)
             {
+                std::string filename = files[i].filename().string();
+
+                // --- Skip if already hashed ---
+                if (redisAvailable && redis.HashExists(filename))
+                {
+                    auto cached = redis.GetHash(filename);
+                    hashes.push_back(cached.value_or("cached"));
+                    durations.push_back(0.0);
+                    skipped++;
+                    continue;
+                }
+
                 WavReader reader(files[i]);
                 inputs.push_back(reader.ReadPCM());
+                batchFiles.push_back(files[i]);
             }
+
+            if (inputs.empty()) continue;
 
             uint32_t count = static_cast<uint32_t>(inputs.size());
             std::vector<uint64_t> batchHashes(count * 4, 0);
 
             auto t0 = std::chrono::high_resolution_clock::now();
-            SHA256BatchWrapper_CPU(inputs, batchHashes.data(), count, config.sha256.threads_per_block);
+            SHA256BatchWrapper_CPU(inputs, batchHashes.data(), count,
+                config.sha256.threads_per_block);
             auto t1 = std::chrono::high_resolution_clock::now();
 
             double ms = std::chrono::duration<double, std::milli>(t1 - t0).count();
 
             for (uint32_t i = 0; i < count; i++)
             {
-                hashes.push_back(HashToHex(batchHashes.data() + i * 4));
+                std::string hex = HashToHex(batchHashes.data() + i * 4);
+                hashes.push_back(hex);
                 durations.push_back(ms / count);
+
+                // --- Store in Redis ---
+                if (redisAvailable)
+                    redis.SetHash(batchFiles[i].filename().string(), hex);
             }
         }
+
+        if (skipped > 0)
+            std::cout << "[INFO] Skipped " << skipped << " already-hashed files." << std::endl;
 
         WriteResultsCsv(config.output_dir, files, hashes, durations);
         std::cout << "[INFO] Done. Processed " << files.size() << " files." << std::endl;
@@ -206,7 +240,8 @@ namespace SignalForge {
             std::vector<uint64_t> batchHashes(count * 4, 0);
 
             auto t0 = std::chrono::high_resolution_clock::now();
-            SHA256BatchWrapper_CPU(inputs, batchHashes.data(), count, config.sha256.threads_per_block);
+            SHA256BatchWrapper_CPU(inputs, batchHashes.data(), count,
+                config.sha256.threads_per_block);
             auto t1 = std::chrono::high_resolution_clock::now();
 
             double ms = std::chrono::duration<double, std::milli>(t1 - t0).count();
@@ -216,7 +251,8 @@ namespace SignalForge {
             std::cout << "[INFO] Batch [" << (start / batchSize + 1) << "]"
                 << " files=" << count
                 << " duration=" << std::fixed << std::setprecision(3) << ms << "ms"
-                << " throughput=" << std::setprecision(1) << (count / (ms / 1000.0)) << " files/sec"
+                << " throughput=" << std::setprecision(1)
+                << (count / (ms / 1000.0)) << " files/sec"
                 << std::endl;
         }
 
@@ -231,8 +267,7 @@ namespace SignalForge {
             static_cast<uint32_t>(batchSize),
             batchDurations,
             files.size(),
-            totalDurationMs
-        );
+            totalDurationMs);
 
         return 0;
     }
@@ -259,23 +294,44 @@ namespace SignalForge {
         std::cout << "[INFO] Threads/block: " << config.fft.threads_per_block << std::endl;
         std::cout << "[INFO] FFT size: " << config.fft_size << std::endl;
 
-        std::vector<double> durations;
-        size_t batchSize = config.fft.batch_size;
-        double totalDurationMs = 0.0;
-        std::vector<double> batchDurations;
+        // --- Connect to Redis ---
+        RedisClient redis;
+        bool redisAvailable = redis.Connect();
+        if (redisAvailable)
+            std::cout << "[INFO] Redis connected - FFT caching enabled." << std::endl;
+        else
+            std::cout << "[WARN] Redis not available - FFT results won't be cached." << std::endl;
 
-        uint32_t half = config.fft_size / 2 + 1;
+        std::vector<double> durations;
+        size_t              skipped = 0;
+        size_t              batchSize = config.fft.batch_size;
+        double              totalDurationMs = 0.0;
+        uint32_t            half = config.fft_size / 2 + 1;
 
         for (size_t start = 0; start < files.size(); start += batchSize)
         {
             size_t end = std::min(start + batchSize, files.size());
             std::vector<std::vector<uint8_t>> inputs;
+            std::vector<std::filesystem::path> batchFiles;
 
             for (size_t i = start; i < end; i++)
             {
+                std::string filename = files[i].filename().string();
+
+                // --- Skip if already processed ---
+                if (redisAvailable && redis.MagnitudesExist(filename))
+                {
+                    durations.push_back(0.0);
+                    skipped++;
+                    continue;
+                }
+
                 WavReader reader(files[i]);
                 inputs.push_back(reader.ReadPCM());
+                batchFiles.push_back(files[i]);
             }
+
+            if (inputs.empty()) continue;
 
             uint32_t count = static_cast<uint32_t>(inputs.size());
             std::vector<float> magnitudes((uint64_t)count * half, 0.0f);
@@ -286,23 +342,38 @@ namespace SignalForge {
             auto t1 = std::chrono::high_resolution_clock::now();
 
             double ms = std::chrono::duration<double, std::milli>(t1 - t0).count();
-            batchDurations.push_back(ms);
             totalDurationMs += ms;
 
             for (uint32_t i = 0; i < count; i++)
+            {
                 durations.push_back(ms / count);
+
+                // --- Store in Redis ---
+                if (redisAvailable)
+                    redis.SetMagnitudes(
+                        batchFiles[i].filename().string(),
+                        magnitudes.data() + (uint64_t)i * half,
+                        half);
+            }
 
             std::cout << "[INFO] Batch [" << (start / batchSize + 1) << "]"
                 << " files=" << count
                 << " duration=" << std::fixed << std::setprecision(3) << ms << "ms"
-                << " throughput=" << std::setprecision(1) << (count / (ms / 1000.0)) << " files/sec"
+                << " throughput=" << std::setprecision(1)
+                << (count / (ms / 1000.0)) << " files/sec"
                 << std::endl;
         }
 
+        if (skipped > 0)
+            std::cout << "[INFO] Skipped " << skipped << " already-processed files." << std::endl;
+
         std::cout << "[INFO] Total duration: " << std::fixed << std::setprecision(3)
             << totalDurationMs << "ms" << std::endl;
-        std::cout << "[INFO] Overall throughput: " << std::setprecision(1)
+        if (totalDurationMs > 0.0)
+            std::cout << "[INFO] Overall throughput: " << std::setprecision(1)
             << (files.size() / (totalDurationMs / 1000.0)) << " files/sec" << std::endl;
+        else
+            std::cout << "[INFO] Overall throughput: all files served from cache." << std::endl;
 
         WriteFFTCsv(config.output_dir, files, durations);
         return 0;

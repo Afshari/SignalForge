@@ -6,12 +6,14 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(Boost_NO_WARN_NEW_VERSIONS 1)
 find_package(Boost 1.91 REQUIRED COMPONENTS json)
+find_package(hiredis CONFIG REQUIRED)
 link_directories(${Boost_LIBRARY_DIRS})
 
 set(CPU_SOURCES
     src/CLParser.cpp
     src/Config.cpp
     src/WavReader.cpp
+    src/RedisClient.cpp
 )
 
 add_library(SignalForge_CPU STATIC ${CPU_SOURCES})
@@ -24,6 +26,7 @@ target_include_directories(SignalForge_CPU PRIVATE
 
 target_link_libraries(SignalForge_CPU PRIVATE
     Boost::json
+    hiredis::hiredis
 )
 
 add_custom_command(TARGET SignalForge_CPU POST_BUILD

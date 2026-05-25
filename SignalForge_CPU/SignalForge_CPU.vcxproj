@@ -22,14 +22,23 @@
     <ClCompile Include="src\CLParser.cpp" />
     <ClCompile Include="src\Config.cpp" />
     <ClCompile Include="src\RedisClient.cpp" />
+    <ClCompile Include="src\SignalForgePipeline.cpp" />
     <ClCompile Include="src\WavReader.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="inc\CLParser.h" />
     <ClInclude Include="inc\Config.h" />
+    <ClInclude Include="inc\FFTResult.h" />
     <ClInclude Include="inc\RedisClient.h" />
+    <ClInclude Include="inc\SignalForgePipeline.h" />
     <ClInclude Include="inc\ThreadSafeQueue.h" />
+    <ClInclude Include="inc\WavBatch.h" />
     <ClInclude Include="inc\WavReader.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\SignalForge_GPU\SignalForge_GPU.vcxproj">
+      <Project>{5095b081-e777-7336-b45e-7e97276c5bb8}</Project>
+    </ProjectReference>
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
@@ -125,7 +134,7 @@
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir)inc;$(BOOST_ROOT);$(VCPKG_ROOT)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)inc;$(BOOST_ROOT);$(VCPKG_ROOT)include;$(SolutionDir)SignalForge_GPU\inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -150,7 +159,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(ProjectDir)inc;$(BOOST_ROOT);$(VCPKG_ROOT)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)inc;$(BOOST_ROOT);$(VCPKG_ROOT)include;$(SolutionDir)SignalForge_GPU\inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>

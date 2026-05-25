@@ -5,8 +5,7 @@
 #include <cmath>
 
 // --------------------------------------------------------------------------------
-// Helper: create a connected client
-// Requires Redis running on localhost:6379
+// Integration tests - require Redis running on localhost:6379
 // --------------------------------------------------------------------------------
 static SignalForge::RedisClient MakeClient()
 {
@@ -48,6 +47,7 @@ TEST(RedisClientTests, Connect_WrongPort_Fails)
 
 // ================================================================================
 // RedisClientTests - SHA-256 hash operations
+// Keys are sha256 hex strings, values are ISO 8601 timestamps
 // ================================================================================
 
 class RedisHashTest : public ::testing::Test
@@ -70,66 +70,72 @@ protected:
 
 TEST_F(RedisHashTest, SetHash_AndGetHash_RoundTrip)
 {
-    std::string key = "engine_clean_500kb_001.wav";
     std::string hash = "9f0148e8d4556e5cd1fed78881d28d86160ae9606b57129a2b5726d536d3701e";
+    std::string timestamp = "2026-05-25T14:32:11";
 
-    EXPECT_TRUE(client.SetHash(key, hash));
+    EXPECT_TRUE(client.SetHash(hash, timestamp));
 
-    auto result = client.GetHash(key);
+    auto result = client.GetHash(hash);
     ASSERT_TRUE(result.has_value());
-    EXPECT_EQ(result.value(), hash);
+    EXPECT_EQ(result.value(), timestamp);
 }
 
 TEST_F(RedisHashTest, GetHash_NonExistentKey_ReturnsNullopt)
 {
-    auto result = client.GetHash("nonexistent.wav");
+    std::string hash = "0000000000000000000000000000000000000000000000000000000000000000";
+    auto result = client.GetHash(hash);
     EXPECT_FALSE(result.has_value());
 }
 
 TEST_F(RedisHashTest, HashExists_ReturnsTrueAfterSet)
 {
-    std::string key = "engine_noisy_500kb_001.wav";
-    EXPECT_FALSE(client.HashExists(key));
+    std::string hash = "aabbccdd00112233aabbccdd00112233aabbccdd00112233aabbccdd00112233";
+    EXPECT_FALSE(client.HashExists(hash));
 
-    client.SetHash(key, "aabbccdd");
-    EXPECT_TRUE(client.HashExists(key));
+    client.SetHash(hash, "2026-05-25T14:32:11");
+    EXPECT_TRUE(client.HashExists(hash));
 }
 
-TEST_F(RedisHashTest, HashExists_ReturnsFalseForUnknownKey)
+TEST_F(RedisHashTest, HashExists_ReturnsFalseForUnknownHash)
 {
-    EXPECT_FALSE(client.HashExists("unknown_file.wav"));
+    std::string hash = "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff";
+    EXPECT_FALSE(client.HashExists(hash));
 }
 
-TEST_F(RedisHashTest, SetHash_OverwritesExistingValue)
+TEST_F(RedisHashTest, SetHash_OverwritesExistingTimestamp)
 {
-    std::string key = "engine_clean_500kb_001.wav";
-    std::string hash1 = "aabbccdd";
-    std::string hash2 = "11223344";
+    std::string hash = "9f0148e8d4556e5cd1fed78881d28d86160ae9606b57129a2b5726d536d3701e";
+    std::string timestamp1 = "2026-05-25T14:32:11";
+    std::string timestamp2 = "2026-05-25T15:00:00";
 
-    client.SetHash(key, hash1);
-    client.SetHash(key, hash2);
+    client.SetHash(hash, timestamp1);
+    client.SetHash(hash, timestamp2);
 
-    auto result = client.GetHash(key);
+    auto result = client.GetHash(hash);
     ASSERT_TRUE(result.has_value());
-    EXPECT_EQ(result.value(), hash2);
+    EXPECT_EQ(result.value(), timestamp2);
 }
 
-TEST_F(RedisHashTest, SetHash_MultipleFiles_IndependentKeys)
+TEST_F(RedisHashTest, SetHash_MultipleHashes_IndependentKeys)
 {
-    client.SetHash("file_a.wav", "hash_a");
-    client.SetHash("file_b.wav", "hash_b");
+    std::string hash_a = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+    std::string hash_b = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
 
-    auto a = client.GetHash("file_a.wav");
-    auto b = client.GetHash("file_b.wav");
+    client.SetHash(hash_a, "2026-05-25T10:00:00");
+    client.SetHash(hash_b, "2026-05-25T11:00:00");
+
+    auto a = client.GetHash(hash_a);
+    auto b = client.GetHash(hash_b);
 
     ASSERT_TRUE(a.has_value());
     ASSERT_TRUE(b.has_value());
-    EXPECT_EQ(a.value(), "hash_a");
-    EXPECT_EQ(b.value(), "hash_b");
+    EXPECT_EQ(a.value(), "2026-05-25T10:00:00");
+    EXPECT_EQ(b.value(), "2026-05-25T11:00:00");
 }
 
 // ================================================================================
 // RedisClientTests - FFT magnitude operations
+// Keys are sha256 hex strings (same hash as used in SetHash for the same file)
 // ================================================================================
 
 class RedisMagnitudeTest : public ::testing::Test
@@ -152,13 +158,13 @@ protected:
 
 TEST_F(RedisMagnitudeTest, SetMagnitudes_AndGetMagnitudes_RoundTrip)
 {
-    std::string key = "engine_clean_500kb_001.wav";
+    std::string hash = "9f0148e8d4556e5cd1fed78881d28d86160ae9606b57129a2b5726d536d3701e";
     std::vector<float> mags = { 0.1f, 0.5f, 1.2f, 0.3f, 0.8f };
 
-    EXPECT_TRUE(client.SetMagnitudes(key, mags.data(), mags.size()));
+    EXPECT_TRUE(client.SetMagnitudes(hash, mags.data(), mags.size()));
 
     std::vector<float> out;
-    EXPECT_TRUE(client.GetMagnitudes(key, out));
+    EXPECT_TRUE(client.GetMagnitudes(hash, out));
 
     ASSERT_EQ(out.size(), mags.size());
     for (size_t i = 0; i < mags.size(); i++)
@@ -167,36 +173,62 @@ TEST_F(RedisMagnitudeTest, SetMagnitudes_AndGetMagnitudes_RoundTrip)
 
 TEST_F(RedisMagnitudeTest, GetMagnitudes_NonExistentKey_ReturnsFalse)
 {
+    std::string hash = "0000000000000000000000000000000000000000000000000000000000000000";
     std::vector<float> out;
-    EXPECT_FALSE(client.GetMagnitudes("nonexistent.wav", out));
+    EXPECT_FALSE(client.GetMagnitudes(hash, out));
 }
 
 TEST_F(RedisMagnitudeTest, MagnitudesExist_ReturnsTrueAfterSet)
 {
-    std::string key = "engine_noisy_500kb_001.wav";
+    std::string hash = "aabbccdd00112233aabbccdd00112233aabbccdd00112233aabbccdd00112233";
     std::vector<float> mags = { 1.0f, 2.0f, 3.0f };
 
-    EXPECT_FALSE(client.MagnitudesExist(key));
-    client.SetMagnitudes(key, mags.data(), mags.size());
-    EXPECT_TRUE(client.MagnitudesExist(key));
+    EXPECT_FALSE(client.MagnitudesExist(hash));
+    client.SetMagnitudes(hash, mags.data(), mags.size());
+    EXPECT_TRUE(client.MagnitudesExist(hash));
 }
 
 TEST_F(RedisMagnitudeTest, SetMagnitudes_LargeArray_RoundTrip)
 {
-    std::string key = "engine_clean_1024kb_001.wav";
+    std::string hash = "9f0148e8d4556e5cd1fed78881d28d86160ae9606b57129a2b5726d536d3701e";
     uint32_t size = 65536 / 2 + 1;
     std::vector<float> mags(size);
     for (uint32_t i = 0; i < size; i++)
         mags[i] = (float)i * 0.001f;
 
-    EXPECT_TRUE(client.SetMagnitudes(key, mags.data(), size));
+    EXPECT_TRUE(client.SetMagnitudes(hash, mags.data(), size));
 
     std::vector<float> out;
-    EXPECT_TRUE(client.GetMagnitudes(key, out));
+    EXPECT_TRUE(client.GetMagnitudes(hash, out));
 
     ASSERT_EQ(out.size(), size);
     float max_diff = 0.0f;
     for (uint32_t i = 0; i < size; i++)
         max_diff = std::max(max_diff, std::abs(out[i] - mags[i]));
     EXPECT_LT(max_diff, 1e-6f);
+}
+
+TEST_F(RedisMagnitudeTest, HashAndMagnitudes_SameKey_IndependentEntries)
+{
+    // Verify that sha256: and fft: prefixes keep the two entries separate
+    // for the same underlying hash
+    std::string hash = "9f0148e8d4556e5cd1fed78881d28d86160ae9606b57129a2b5726d536d3701e";
+    std::string timestamp = "2026-05-25T14:32:11";
+    std::vector<float> mags = { 0.1f, 0.2f, 0.3f };
+
+    EXPECT_TRUE(client.SetHash(hash, timestamp));
+    EXPECT_TRUE(client.SetMagnitudes(hash, mags.data(), mags.size()));
+
+    // Both should exist independently
+    EXPECT_TRUE(client.HashExists(hash));
+    EXPECT_TRUE(client.MagnitudesExist(hash));
+
+    // Hash entry should not affect magnitude entry
+    auto ts = client.GetHash(hash);
+    ASSERT_TRUE(ts.has_value());
+    EXPECT_EQ(ts.value(), timestamp);
+
+    std::vector<float> out;
+    EXPECT_TRUE(client.GetMagnitudes(hash, out));
+    ASSERT_EQ(out.size(), mags.size());
 }

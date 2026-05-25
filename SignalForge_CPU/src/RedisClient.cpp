@@ -81,20 +81,22 @@ namespace SignalForge {
     }
 
     // --------------------------------------------------------------------------------
-    bool RedisClient::SetHash(const std::string& key, const std::string& hash)
+    // key: sha256 hex string
+    // value: ISO 8601 timestamp - when the file content was first seen
+    bool RedisClient::SetHash(const std::string& hash, const std::string& timestamp)
     {
         if (!IsConnected()) return false;
-        std::string redisKey = "sha256:" + key;
+        std::string redisKey = "sha256:" + hash;
         redisReply* reply = (redisReply*)redisCommand(
-            m_ctx, "SET %s %s", redisKey.c_str(), hash.c_str());
+            m_ctx, "SET %s %s", redisKey.c_str(), timestamp.c_str());
         return CheckReply(reply);
     }
 
     // --------------------------------------------------------------------------------
-    std::optional<std::string> RedisClient::GetHash(const std::string& key)
+    std::optional<std::string> RedisClient::GetHash(const std::string& hash)
     {
         if (!IsConnected()) return std::nullopt;
-        std::string redisKey = "sha256:" + key;
+        std::string redisKey = "sha256:" + hash;
         redisReply* reply = (redisReply*)redisCommand(
             m_ctx, "GET %s", redisKey.c_str());
         if (!reply || reply->type == REDIS_REPLY_NIL)
@@ -108,10 +110,10 @@ namespace SignalForge {
     }
 
     // --------------------------------------------------------------------------------
-    bool RedisClient::HashExists(const std::string& key)
+    bool RedisClient::HashExists(const std::string& hash)
     {
         if (!IsConnected()) return false;
-        std::string redisKey = "sha256:" + key;
+        std::string redisKey = "sha256:" + hash;
         redisReply* reply = (redisReply*)redisCommand(
             m_ctx, "EXISTS %s", redisKey.c_str());
         if (!reply) return false;
@@ -121,11 +123,13 @@ namespace SignalForge {
     }
 
     // --------------------------------------------------------------------------------
-    bool RedisClient::SetMagnitudes(const std::string& key,
+    // key: sha256 hex string (same hash used in SetHash for the same file)
+    // data: fft_size/2+1 floats
+    bool RedisClient::SetMagnitudes(const std::string& hash,
         const float* data, uint32_t size)
     {
         if (!IsConnected()) return false;
-        std::string redisKey = "fft:" + key;
+        std::string redisKey = "fft:" + hash;
         redisReply* reply = (redisReply*)redisCommand(
             m_ctx, "SET %s %b", redisKey.c_str(),
             (const char*)data, (size_t)(size * sizeof(float)));
@@ -133,10 +137,10 @@ namespace SignalForge {
     }
 
     // --------------------------------------------------------------------------------
-    bool RedisClient::GetMagnitudes(const std::string& key, std::vector<float>& out)
+    bool RedisClient::GetMagnitudes(const std::string& hash, std::vector<float>& out)
     {
         if (!IsConnected()) return false;
-        std::string redisKey = "fft:" + key;
+        std::string redisKey = "fft:" + hash;
         redisReply* reply = (redisReply*)redisCommand(
             m_ctx, "GET %s", redisKey.c_str());
         if (!reply || reply->type == REDIS_REPLY_NIL)
@@ -151,10 +155,10 @@ namespace SignalForge {
     }
 
     // --------------------------------------------------------------------------------
-    bool RedisClient::MagnitudesExist(const std::string& key)
+    bool RedisClient::MagnitudesExist(const std::string& hash)
     {
         if (!IsConnected()) return false;
-        std::string redisKey = "fft:" + key;
+        std::string redisKey = "fft:" + hash;
         redisReply* reply = (redisReply*)redisCommand(
             m_ctx, "EXISTS %s", redisKey.c_str());
         if (!reply) return false;

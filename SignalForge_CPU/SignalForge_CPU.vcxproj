@@ -28,6 +28,7 @@
     <ClInclude Include="inc\CLParser.h" />
     <ClInclude Include="inc\Config.h" />
     <ClInclude Include="inc\RedisClient.h" />
+    <ClInclude Include="inc\ThreadSafeQueue.h" />
     <ClInclude Include="inc\WavReader.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

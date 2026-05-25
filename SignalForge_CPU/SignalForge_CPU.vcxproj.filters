@@ -41,5 +41,8 @@
     <ClInclude Include="inc\RedisClient.h">
       <Filter>inc</Filter>
     </ClInclude>
+    <ClInclude Include="inc\ThreadSafeQueue.h">
+      <Filter>inc</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

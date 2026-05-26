@@ -14,23 +14,6 @@
 namespace SignalForge {
 
     // --------------------------------------------------------------------------------
-    std::vector<std::filesystem::path> AppRunner::ScanWavFiles(
-        const std::filesystem::path& dir)
-    {
-        std::vector<std::filesystem::path> paths;
-        if (!std::filesystem::exists(dir))
-            return paths;
-
-        for (const auto& entry : std::filesystem::directory_iterator(dir))
-        {
-            if (!entry.is_regular_file()) continue;
-            if (entry.path().extension() != ".wav") continue;
-            paths.push_back(entry.path());
-        }
-        return paths;
-    }
-
-    // --------------------------------------------------------------------------------
     static std::string HashToHex(const uint64_t* h_hash)
     {
         std::ostringstream oss;
@@ -118,7 +101,7 @@ namespace SignalForge {
             return 1;
         }
 
-        auto files = ScanWavFiles(config.input_dir);
+        auto files = Utils::ScanWavFiles(config.input_dir);
         if (files.empty())
         {
             std::cout << "[INFO] No .wav files found in: " << config.input_dir << std::endl;
@@ -198,7 +181,7 @@ namespace SignalForge {
             return 1;
         }
 
-        auto files = ScanWavFiles(config.input_dir);
+        auto files = Utils::ScanWavFiles(config.input_dir);
         if (files.empty())
         {
             std::cout << "[INFO] No .wav files found in: " << config.input_dir << std::endl;
@@ -270,7 +253,7 @@ namespace SignalForge {
             return 1;
         }
 
-        auto files = ScanWavFiles(config.input_dir);
+        auto files = Utils::ScanWavFiles(config.input_dir);
         if (files.empty())
         {
             std::cout << "[INFO] No .wav files found in: " << config.input_dir << std::endl;

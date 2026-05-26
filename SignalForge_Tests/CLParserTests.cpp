@@ -57,7 +57,9 @@ TEST_F(CLParserTest, NoArgs_DefaultsToExePathAndHashMode)
     #endif
 
     EXPECT_FALSE(parser.IsProfileMode());
-
+    EXPECT_FALSE(parser.IsProfileMode());
+    EXPECT_FALSE(parser.IsFftMode());
+    EXPECT_FALSE(parser.IsPipelineMode());
 }
 
 TEST_F(CLParserTest, NoArgs_NoDirectory_ConfigDirIsEmpty)
@@ -197,4 +199,72 @@ TEST_F(CLParserTest, ProfileAndFft_AreIndependent)
 
     EXPECT_TRUE(parser.IsProfileMode());
     EXPECT_TRUE(parser.IsFftMode());
+}
+
+// ================================================================================
+// CLParserTests - Pipeline mode
+// ================================================================================
+
+TEST_F(CLParserTest, PipelineFlag_SetsPipelineMode)
+{
+    char* argv[] = { (char*)"SignalForge.exe", (char*)"--pipeline" };
+    auto parser = SignalForge::CLParser::Parse(2, argv);
+
+    EXPECT_FALSE(parser.IsFftMode());
+    EXPECT_FALSE(parser.IsProfileMode());
+    EXPECT_TRUE(parser.IsPipelineMode());
+}
+
+TEST_F(CLParserTest, PipelineFlag_AndConfigDir_BothParsedCorrectly)
+{
+    std::string dir = temp_dir.string();
+    char* argv[] = { (char*)"SignalForge.exe", (char*)"--pipeline", (char*)"--config", (char*)dir.c_str() };
+    auto parser = SignalForge::CLParser::Parse(4, argv);
+
+    EXPECT_FALSE(parser.IsFftMode());
+    EXPECT_FALSE(parser.IsProfileMode());
+    EXPECT_TRUE(parser.IsPipelineMode());
+    EXPECT_EQ(parser.GetConfigDir(), fs::path(dir));
+}
+
+TEST_F(CLParserTest, NoPipelineFlag_PipelineModeIsFalse)
+{
+    char* argv[] = { (char*)"SignalForge.exe" };
+    auto parser = SignalForge::CLParser::Parse(1, argv);
+
+    EXPECT_FALSE(parser.IsPipelineMode());
+}
+
+TEST_F(CLParserTest, ProfileAndPipeline_AreIndependent)
+{
+    char* argv[] = { (char*)"SignalForge.exe", (char*)"--profile", (char*)"--pipeline" };
+    auto parser = SignalForge::CLParser::Parse(3, argv);
+
+    EXPECT_TRUE(parser.IsProfileMode());
+    EXPECT_TRUE(parser.IsPipelineMode());
+}
+
+// ================================================================================
+// CLParserTests - Hash mode (default)
+// ================================================================================
+
+TEST_F(CLParserTest, NoFlags_DefaultsToHashMode)
+{
+    char* argv[] = { (char*)"SignalForge.exe" };
+    auto parser = SignalForge::CLParser::Parse(1, argv);
+
+    EXPECT_FALSE(parser.IsProfileMode());
+    EXPECT_FALSE(parser.IsFftMode());
+    EXPECT_FALSE(parser.IsPipelineMode());
+}
+
+TEST_F(CLParserTest, HashMode_IsIndependentOfOtherFlags)
+{
+    char* argv[] = { (char*)"SignalForge.exe", (char*)"--profile",
+                     (char*)"--fft", (char*)"--pipeline" };
+    auto parser = SignalForge::CLParser::Parse(4, argv);
+
+    EXPECT_TRUE(parser.IsProfileMode());
+    EXPECT_TRUE(parser.IsFftMode());
+    EXPECT_TRUE(parser.IsPipelineMode());
 }

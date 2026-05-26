@@ -21,6 +21,8 @@ namespace SignalForge {
                 parser.m_profileMode = true;
             else if (arg == "--fft")
                 parser.m_fftMode = true;
+            else if (arg == "--pipeline")
+                parser.m_pipelineMode = true;
             else if (arg == "--config" && i + 1 < argc)
                 parser.m_configDir = std::filesystem::weakly_canonical(
                     std::filesystem::path(argv[++i])

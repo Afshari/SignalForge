@@ -1,8 +1,10 @@
 #pragma once
 #include <string>
 #include <chrono>
-#include <iostream>
 #include <sstream>
+#include <vector>
+#include <filesystem>
+#include <iomanip>
 
 namespace SignalForge {
 
@@ -15,7 +17,7 @@ namespace SignalForge {
 	};
 
 	// --------------------------------------------------------------------------------
-	std::string Utils::HashToHex(const uint64_t* h_hash)
+	inline std::string Utils::HashToHex(const uint64_t* h_hash)
 	{
 		std::ostringstream oss;
 		for (int i = 0; i < 4; i++)
@@ -24,7 +26,7 @@ namespace SignalForge {
 	}
 
 	// --------------------------------------------------------------------------------
-	std::string Utils::NowISO8601()
+	inline std::string Utils::NowISO8601()
 	{
 		auto now = std::chrono::system_clock::now();
 		std::time_t t = std::chrono::system_clock::to_time_t(now);
@@ -40,7 +42,7 @@ namespace SignalForge {
 	}
 
 	// --------------------------------------------------------------------------------
-	std::vector<std::filesystem::path> Utils::ScanWavFiles(
+	inline std::vector<std::filesystem::path> Utils::ScanWavFiles(
 		const std::filesystem::path& dir)
 	{
 		std::vector<std::filesystem::path> paths;

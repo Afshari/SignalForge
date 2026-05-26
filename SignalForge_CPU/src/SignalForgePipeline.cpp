@@ -85,6 +85,8 @@ namespace SignalForge {
 
                 // Accumulator - survivors waiting for FFT
                 std::vector<std::vector<uint8_t>> accum_pcm;
+                size_t skipped = 0;
+                size_t total_processed = 0;
                 std::vector<std::string>          accum_hashes;
 
                 uint32_t half = m_config.fft_size / 2 + 1;
@@ -125,8 +127,11 @@ namespace SignalForge {
                     {
                         std::string hex = Utils::HashToHex(batchHashes.data() + i * 4);
 
-                        if (redisAvailable && redis.HashExists(hex))
+                        total_processed++;
+                        if (redisAvailable && redis.HashExists(hex)) {
+                            skipped++;
                             continue;
+                        }
 
                         // Store hash in Redis with timestamp
                         if (redisAvailable)
@@ -145,7 +150,9 @@ namespace SignalForge {
                 flushFFT();
 
                 m_result_queue.close();
-                std::cout << "[GPU] Done." << std::endl;
+                std::cout << "[GPU] Done. Skipped " << skipped
+                    << " duplicates, sent " << (total_processed - skipped)
+                    << " to FFT." << std::endl;
             });
 
         // --- Thread 4: Redis writer ---

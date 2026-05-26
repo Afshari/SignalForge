@@ -5,8 +5,8 @@
 namespace SignalForge {
 
     // --------------------------------------------------------------------------------
-    RedisClient::RedisClient(const std::string& host, int port)
-        : m_host(host), m_port(port), m_ctx(nullptr)
+    RedisClient::RedisClient(const std::string& host, int port, int db)
+        : m_host(host), m_port(port), m_ctx(nullptr), m_db(db)
     {
     }
 
@@ -32,6 +32,10 @@ namespace SignalForge {
                 std::cerr << "[Redis] Cannot allocate context" << std::endl;
             return false;
         }
+
+        // Connection succeeded - select the correct database
+        redisReply* reply = (redisReply*)redisCommand(m_ctx, "SELECT %d", m_db);
+        if (reply) freeReplyObject(reply);
         return true;
     }
 

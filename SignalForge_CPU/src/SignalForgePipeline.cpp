@@ -2,6 +2,7 @@
 #include "WavReader.h"
 #include "RedisClient.h"
 #include "cpu/SignalForge.h"
+#include "Utils.h"
 #include <thread>
 #include <chrono>
 #include <iostream>
@@ -9,31 +10,6 @@
 #include <iomanip>
 
 namespace SignalForge {
-
-    // --------------------------------------------------------------------------------
-    static std::string HashToHex(const uint64_t* h_hash)
-    {
-        std::ostringstream oss;
-        for (int i = 0; i < 4; i++)
-            oss << std::hex << std::setw(16) << std::setfill('0') << h_hash[i];
-        return oss.str();
-    }
-
-    // --------------------------------------------------------------------------------
-    static std::string NowISO8601()
-    {
-        auto now = std::chrono::system_clock::now();
-        std::time_t t = std::chrono::system_clock::to_time_t(now);
-        std::tm tm{};
-#ifdef _WIN32
-        gmtime_s(&tm, &t);
-#else
-        gmtime_r(&t, &tm);
-#endif
-        std::ostringstream oss;
-        oss << std::put_time(&tm, "%Y-%m-%dT%H:%M:%S");
-        return oss.str();
-    }
 
     // --------------------------------------------------------------------------------
     SignalForgePipeline::SignalForgePipeline(
@@ -147,14 +123,14 @@ namespace SignalForge {
                     // Filter duplicates - add survivors to accumulator
                     for (uint32_t i = 0; i < count; i++)
                     {
-                        std::string hex = HashToHex(batchHashes.data() + i * 4);
+                        std::string hex = Utils::HashToHex(batchHashes.data() + i * 4);
 
                         if (redisAvailable && redis.HashExists(hex))
                             continue;
 
                         // Store hash in Redis with timestamp
                         if (redisAvailable)
-                            redis.SetHash(hex, NowISO8601());
+                            redis.SetHash(hex, Utils::NowISO8601());
 
                         accum_pcm.push_back(std::move(batch->pcm_data[i]));
                         accum_hashes.push_back(std::move(hex));

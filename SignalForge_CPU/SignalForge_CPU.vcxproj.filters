@@ -56,5 +56,8 @@
     <ClInclude Include="inc\SignalForgePipeline.h">
       <Filter>inc</Filter>
     </ClInclude>
+    <ClInclude Include="inc\Utils.h">
+      <Filter>inc</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

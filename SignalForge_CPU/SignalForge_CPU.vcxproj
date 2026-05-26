@@ -32,6 +32,7 @@
     <ClInclude Include="inc\RedisClient.h" />
     <ClInclude Include="inc\SignalForgePipeline.h" />
     <ClInclude Include="inc\ThreadSafeQueue.h" />
+    <ClInclude Include="inc\Utils.h" />
     <ClInclude Include="inc\WavBatch.h" />
     <ClInclude Include="inc\WavReader.h" />
   </ItemGroup>

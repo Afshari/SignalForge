@@ -35,7 +35,7 @@ namespace SignalForge {
 
     TEST(RedisClientTests, Connect_WrongPort_Fails)
     {
-        SignalForge::RedisClient client("127.0.0.1", 9999);
+        SignalForge::RedisClient client("invalid-host-that-does-not-exist", 9999);
         EXPECT_FALSE(client.Connect());
         EXPECT_FALSE(client.IsConnected());
     }

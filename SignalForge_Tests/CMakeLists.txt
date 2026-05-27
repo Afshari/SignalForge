@@ -27,6 +27,7 @@ set(TEST_SOURCES
     WavReaderTests.cpp
     FFTTests.cpp
     RedisClientTests.cpp
+    PipelineTests.cpp
 )
 
 add_executable(SignalForge_Tests ${TEST_SOURCES})

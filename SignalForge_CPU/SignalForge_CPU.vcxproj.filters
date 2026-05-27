@@ -30,6 +30,9 @@
     <ClCompile Include="src\SignalForgePipeline.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="src\GrpcReceiverThread.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="inc\Config.h">
@@ -57,6 +60,9 @@
       <Filter>inc</Filter>
     </ClInclude>
     <ClInclude Include="inc\Utils.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\GrpcReceiverThread.h">
       <Filter>inc</Filter>
     </ClInclude>
   </ItemGroup>

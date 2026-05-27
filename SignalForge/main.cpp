@@ -4,6 +4,10 @@
 #include "SignalForgePipeline.h"
 #include "Utils.h"
 #include <iostream>
+#pragma warning(push)
+#pragma warning(disable: 4996)
+#include <grpcpp/grpcpp.h>
+#pragma warning(pop)
 
 int main(int argc, char* argv[])
 {

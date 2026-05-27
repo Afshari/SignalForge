@@ -21,6 +21,7 @@
   <ItemGroup>
     <ClCompile Include="src\CLParser.cpp" />
     <ClCompile Include="src\Config.cpp" />
+    <ClCompile Include="src\GrpcReceiverThread.cpp" />
     <ClCompile Include="src\RedisClient.cpp" />
     <ClCompile Include="src\SignalForgePipeline.cpp" />
     <ClCompile Include="src\WavReader.cpp" />
@@ -29,6 +30,7 @@
     <ClInclude Include="inc\CLParser.h" />
     <ClInclude Include="inc\Config.h" />
     <ClInclude Include="inc\FFTResult.h" />
+    <ClInclude Include="inc\GrpcReceiverThread.h" />
     <ClInclude Include="inc\RedisClient.h" />
     <ClInclude Include="inc\SignalForgePipeline.h" />
     <ClInclude Include="inc\ThreadSafeQueue.h" />
@@ -135,7 +137,7 @@
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir)inc;$(BOOST_ROOT);$(VCPKG_ROOT)include;$(SolutionDir)SignalForge_GPU\inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)inc;$(BOOST_ROOT);$(VCPKG_ROOT)\installed\x64-windows\include;$(SolutionDir)SignalForge_GPU\inc;$(SolutionDir)SignalForge_Proto;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -143,10 +145,10 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <Lib>
-      <AdditionalDependencies>hiredis.lib</AdditionalDependencies>
+      <AdditionalDependencies>hiredis.lib;grpc.lib;grpc++.lib;libprotobuf.lib;gpr.lib</AdditionalDependencies>
     </Lib>
     <Lib>
-      <AdditionalLibraryDirectories>$(VCPKG_ROOT)lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(VCPKG_ROOT)\installed\x64-windows\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -160,7 +162,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(ProjectDir)inc;$(BOOST_ROOT);$(VCPKG_ROOT)include;$(SolutionDir)SignalForge_GPU\inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)inc;$(BOOST_ROOT);$(VCPKG_ROOT)\installed\x64-windows\include;$(SolutionDir)SignalForge_GPU\inc;$(SolutionDir)SignalForge_Proto;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
@@ -169,10 +171,10 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <Lib>
-      <AdditionalDependencies>hiredis.lib</AdditionalDependencies>
+      <AdditionalDependencies>hiredis.lib;grpc.lib;grpc++.lib;libprotobuf.lib;gpr.lib</AdditionalDependencies>
     </Lib>
     <Lib>
-      <AdditionalLibraryDirectories>$(VCPKG_ROOT)lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(VCPKG_ROOT)\installed\x64-windows\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Lib>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

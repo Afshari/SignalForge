@@ -34,6 +34,13 @@ RUN git clone https://github.com/redis/hiredis.git && \
     cd ../.. && \
     rm -rf hiredis
 
+# gRPC and Protobuf
+RUN apt-get update && apt-get install -y \
+    libgrpc++-dev \
+    libprotobuf-dev \
+    protobuf-compiler-grpc \
+    && rm -rf /var/lib/apt/lists/*
+
 # Copy requirements and install
 COPY requirements.txt .
 RUN pip3 install -r requirements.txt

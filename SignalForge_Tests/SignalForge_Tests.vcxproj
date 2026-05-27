@@ -113,11 +113,13 @@ xcopy /Y /I /E "$(SolutionDir)SignalForge_Tests\test_data" "$(OutDir)test_data"<
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
+    <ClInclude Include="TestHelpers.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CLParserTests.cpp" />
     <ClCompile Include="ConfigTests.cpp" />
     <ClCompile Include="FFTTests.cpp" />
+    <ClCompile Include="PipelineTests.cpp" />
     <ClCompile Include="RedisClientTests.cpp" />
     <ClCompile Include="SHA256Tests.cpp" />
     <ClCompile Include="pch.cpp">

@@ -27,6 +27,9 @@
     <ClCompile Include="src\RedisClient.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="src\SignalForgePipeline.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="inc\Config.h">
@@ -42,6 +45,18 @@
       <Filter>inc</Filter>
     </ClInclude>
     <ClInclude Include="inc\ThreadSafeQueue.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\WavBatch.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\FFTResult.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\SignalForgePipeline.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\Utils.h">
       <Filter>inc</Filter>
     </ClInclude>
   </ItemGroup>

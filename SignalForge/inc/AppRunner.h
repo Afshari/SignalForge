@@ -14,8 +14,7 @@ namespace SignalForge {
         static int RunFFT(const Config& config);
 
     private:
-        static std::vector<std::filesystem::path> ScanWavFiles(
-            const std::filesystem::path& dir);
+        
     };
 
 } // namespace SignalForge

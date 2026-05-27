@@ -14,6 +14,7 @@ set(CPU_SOURCES
     src/Config.cpp
     src/WavReader.cpp
     src/RedisClient.cpp
+    src/SignalForgePipeline.cpp
 )
 
 add_library(SignalForge_CPU STATIC ${CPU_SOURCES})

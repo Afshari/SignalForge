@@ -6,8 +6,14 @@ namespace SignalForge {
 
     // --------------------------------------------------------------------------------
     RedisClient::RedisClient(const std::string& host, int port, int db)
-        : m_host(host), m_port(port), m_ctx(nullptr), m_db(db)
     {
+        const char* env_host = std::getenv("REDIS_HOST");
+        const char* env_port = std::getenv("REDIS_PORT");
+
+        m_host = env_host ? env_host : host;
+        m_port = env_port ? std::stoi(env_port) : port;
+        m_db = db;
+        m_ctx = nullptr;
     }
 
     // --------------------------------------------------------------------------------

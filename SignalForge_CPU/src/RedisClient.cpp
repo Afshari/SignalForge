@@ -7,13 +7,27 @@ namespace SignalForge {
     // --------------------------------------------------------------------------------
     RedisClient::RedisClient(const std::string& host, int port, int db)
     {
+        m_ctx = nullptr;
+        m_db = db;
+
+#ifdef _WIN32
+        char* env_host = nullptr;
+        char* env_port = nullptr;
+        size_t len = 0;
+        _dupenv_s(&env_host, &len, "REDIS_HOST");
+        _dupenv_s(&env_port, &len, "REDIS_PORT");
+#else
         const char* env_host = std::getenv("REDIS_HOST");
         const char* env_port = std::getenv("REDIS_PORT");
+#endif
 
         m_host = env_host ? env_host : host;
         m_port = env_port ? std::stoi(env_port) : port;
-        m_db = db;
-        m_ctx = nullptr;
+
+#ifdef _WIN32
+        free(env_host);
+        free(env_port);
+#endif
     }
 
     // --------------------------------------------------------------------------------
@@ -158,7 +172,7 @@ namespace SignalForge {
             freeReplyObject(reply);
             return false;
         }
-        uint32_t count = reply->len / sizeof(float);
+        uint32_t count = static_cast<uint32_t>(reply->len / sizeof(float));
         out.assign((float*)reply->str, (float*)reply->str + count);
         freeReplyObject(reply);
         return true;

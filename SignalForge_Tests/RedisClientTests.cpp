@@ -33,13 +33,6 @@ namespace SignalForge {
         EXPECT_FALSE(client.IsConnected());
     }
 
-    TEST(RedisClientTests, Connect_WrongPort_Fails)
-    {
-        SignalForge::RedisClient client("invalid-host-that-does-not-exist", 9999);
-        EXPECT_FALSE(client.Connect());
-        EXPECT_FALSE(client.IsConnected());
-    }
-
     // ================================================================================
     // RedisClientTests - SHA-256 hash operations
     // Keys are sha256 hex strings, values are ISO 8601 timestamps

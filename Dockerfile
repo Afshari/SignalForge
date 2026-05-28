@@ -49,14 +49,15 @@ RUN pip3 install -r requirements.txt
 WORKDIR /app
 COPY . .
 
+RUN find /usr -name "gRPCConfig.cmake" -o -name "grpc-config.cmake" 2>/dev/null
+
 # Build
 RUN mkdir -p build && cd build && \
     cmake .. \
         -DCMAKE_BUILD_TYPE=Release \
         -DCMAKE_CUDA_ARCHITECTURES=75 \
         -DBOOST_ROOT=/usr/local \
-        -DCMAKE_PREFIX_PATH=/usr/local && \
-        -DCMAKE_PREFIX_PATH="/usr/local;/usr" \
+        -DCMAKE_PREFIX_PATH="/usr/local;/usr/lib/x86_64-linux-gnu/cmake" && \
     cmake --build . --config Release -j$(nproc)
     
 # Python venv setup

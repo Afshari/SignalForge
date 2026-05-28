@@ -111,8 +111,8 @@ namespace SignalForge
         {
             m_thread.join();
         }
-        // push sentinel so downstream threads know this producer is done
-        m_path_queue.push("");
+        if (!m_path_queue.is_closed())
+            m_path_queue.close();
     }
 
     void GrpcReceiverThread::Run()
@@ -135,6 +135,53 @@ namespace SignalForge
         {
             m_server->Wait();
         }
+    }
+
+    grpc::Status SignalForgeServiceImpl::Register(grpc::ServerContext* /*context*/,
+        const RegisterRequest* /*request*/,
+        RegisterResponse* response)
+    {
+        // generate unique client_id
+        auto now = std::chrono::system_clock::now();
+        auto seconds = std::chrono::duration_cast<std::chrono::seconds>(
+            now.time_since_epoch()).count();
+
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        std::uniform_int_distribution<> dist(0, 0xFFFFFF);
+        std::ostringstream oss;
+        oss << "client_" << seconds << "_"
+            << std::hex << std::setw(6) << std::setfill('0') << dist(gen);
+        std::string client_id = oss.str();
+
+        {
+            std::lock_guard<std::mutex> lock(m_clients_mutex);
+            m_registered_clients.insert(client_id);
+        }
+
+        response->set_accepted(true);
+        response->set_client_id(client_id);
+        return grpc::Status::OK;
+    }
+
+    grpc::Status SignalForgeServiceImpl::Shutdown(grpc::ServerContext* /*context*/,
+        const ShutdownRequest* request,
+        ShutdownResponse* response)
+    {
+        {
+            std::lock_guard<std::mutex> lock(m_clients_mutex);
+            m_registered_clients.erase(request->client_id());
+
+            if (m_registered_clients.empty())
+            {
+                // last client disconnected - close the queue
+                m_path_queue.close();
+            }
+        }
+
+        response->set_accepted(true);
+        response->set_message("ok");
+        return grpc::Status::OK;
     }
 
 } // namespace SignalForge

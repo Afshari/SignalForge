@@ -24,6 +24,8 @@ namespace SignalForge {
 
 static const char* SignalForgeService_method_names[] = {
   "/SignalForge.SignalForgeService/SendFile",
+  "/SignalForge.SignalForgeService/Register",
+  "/SignalForge.SignalForgeService/Shutdown",
 };
 
 std::unique_ptr< SignalForgeService::Stub> SignalForgeService::NewStub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const ::grpc::StubOptions& options) {
@@ -34,6 +36,8 @@ std::unique_ptr< SignalForgeService::Stub> SignalForgeService::NewStub(const std
 
 SignalForgeService::Stub::Stub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const ::grpc::StubOptions& options)
   : channel_(channel), rpcmethod_SendFile_(SignalForgeService_method_names[0], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_Register_(SignalForgeService_method_names[1], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_Shutdown_(SignalForgeService_method_names[2], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
   {}
 
 ::grpc::Status SignalForgeService::Stub::SendFile(::grpc::ClientContext* context, const ::SignalForge::FileRequest& request, ::SignalForge::FileResponse* response) {
@@ -59,6 +63,52 @@ void SignalForgeService::Stub::async::SendFile(::grpc::ClientContext* context, c
   return result;
 }
 
+::grpc::Status SignalForgeService::Stub::Register(::grpc::ClientContext* context, const ::SignalForge::RegisterRequest& request, ::SignalForge::RegisterResponse* response) {
+  return ::grpc::internal::BlockingUnaryCall< ::SignalForge::RegisterRequest, ::SignalForge::RegisterResponse, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), rpcmethod_Register_, context, request, response);
+}
+
+void SignalForgeService::Stub::async::Register(::grpc::ClientContext* context, const ::SignalForge::RegisterRequest* request, ::SignalForge::RegisterResponse* response, std::function<void(::grpc::Status)> f) {
+  ::grpc::internal::CallbackUnaryCall< ::SignalForge::RegisterRequest, ::SignalForge::RegisterResponse, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_Register_, context, request, response, std::move(f));
+}
+
+void SignalForgeService::Stub::async::Register(::grpc::ClientContext* context, const ::SignalForge::RegisterRequest* request, ::SignalForge::RegisterResponse* response, ::grpc::ClientUnaryReactor* reactor) {
+  ::grpc::internal::ClientCallbackUnaryFactory::Create< ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_Register_, context, request, response, reactor);
+}
+
+::grpc::ClientAsyncResponseReader< ::SignalForge::RegisterResponse>* SignalForgeService::Stub::PrepareAsyncRegisterRaw(::grpc::ClientContext* context, const ::SignalForge::RegisterRequest& request, ::grpc::CompletionQueue* cq) {
+  return ::grpc::internal::ClientAsyncResponseReaderHelper::Create< ::SignalForge::RegisterResponse, ::SignalForge::RegisterRequest, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), cq, rpcmethod_Register_, context, request);
+}
+
+::grpc::ClientAsyncResponseReader< ::SignalForge::RegisterResponse>* SignalForgeService::Stub::AsyncRegisterRaw(::grpc::ClientContext* context, const ::SignalForge::RegisterRequest& request, ::grpc::CompletionQueue* cq) {
+  auto* result =
+    this->PrepareAsyncRegisterRaw(context, request, cq);
+  result->StartCall();
+  return result;
+}
+
+::grpc::Status SignalForgeService::Stub::Shutdown(::grpc::ClientContext* context, const ::SignalForge::ShutdownRequest& request, ::SignalForge::ShutdownResponse* response) {
+  return ::grpc::internal::BlockingUnaryCall< ::SignalForge::ShutdownRequest, ::SignalForge::ShutdownResponse, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), rpcmethod_Shutdown_, context, request, response);
+}
+
+void SignalForgeService::Stub::async::Shutdown(::grpc::ClientContext* context, const ::SignalForge::ShutdownRequest* request, ::SignalForge::ShutdownResponse* response, std::function<void(::grpc::Status)> f) {
+  ::grpc::internal::CallbackUnaryCall< ::SignalForge::ShutdownRequest, ::SignalForge::ShutdownResponse, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_Shutdown_, context, request, response, std::move(f));
+}
+
+void SignalForgeService::Stub::async::Shutdown(::grpc::ClientContext* context, const ::SignalForge::ShutdownRequest* request, ::SignalForge::ShutdownResponse* response, ::grpc::ClientUnaryReactor* reactor) {
+  ::grpc::internal::ClientCallbackUnaryFactory::Create< ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_Shutdown_, context, request, response, reactor);
+}
+
+::grpc::ClientAsyncResponseReader< ::SignalForge::ShutdownResponse>* SignalForgeService::Stub::PrepareAsyncShutdownRaw(::grpc::ClientContext* context, const ::SignalForge::ShutdownRequest& request, ::grpc::CompletionQueue* cq) {
+  return ::grpc::internal::ClientAsyncResponseReaderHelper::Create< ::SignalForge::ShutdownResponse, ::SignalForge::ShutdownRequest, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), cq, rpcmethod_Shutdown_, context, request);
+}
+
+::grpc::ClientAsyncResponseReader< ::SignalForge::ShutdownResponse>* SignalForgeService::Stub::AsyncShutdownRaw(::grpc::ClientContext* context, const ::SignalForge::ShutdownRequest& request, ::grpc::CompletionQueue* cq) {
+  auto* result =
+    this->PrepareAsyncShutdownRaw(context, request, cq);
+  result->StartCall();
+  return result;
+}
+
 SignalForgeService::Service::Service() {
   AddMethod(new ::grpc::internal::RpcServiceMethod(
       SignalForgeService_method_names[0],
@@ -70,12 +120,46 @@ SignalForgeService::Service::Service() {
              ::SignalForge::FileResponse* resp) {
                return service->SendFile(ctx, req, resp);
              }, this)));
+  AddMethod(new ::grpc::internal::RpcServiceMethod(
+      SignalForgeService_method_names[1],
+      ::grpc::internal::RpcMethod::NORMAL_RPC,
+      new ::grpc::internal::RpcMethodHandler< SignalForgeService::Service, ::SignalForge::RegisterRequest, ::SignalForge::RegisterResponse, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(
+          [](SignalForgeService::Service* service,
+             ::grpc::ServerContext* ctx,
+             const ::SignalForge::RegisterRequest* req,
+             ::SignalForge::RegisterResponse* resp) {
+               return service->Register(ctx, req, resp);
+             }, this)));
+  AddMethod(new ::grpc::internal::RpcServiceMethod(
+      SignalForgeService_method_names[2],
+      ::grpc::internal::RpcMethod::NORMAL_RPC,
+      new ::grpc::internal::RpcMethodHandler< SignalForgeService::Service, ::SignalForge::ShutdownRequest, ::SignalForge::ShutdownResponse, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(
+          [](SignalForgeService::Service* service,
+             ::grpc::ServerContext* ctx,
+             const ::SignalForge::ShutdownRequest* req,
+             ::SignalForge::ShutdownResponse* resp) {
+               return service->Shutdown(ctx, req, resp);
+             }, this)));
 }
 
 SignalForgeService::Service::~Service() {
 }
 
 ::grpc::Status SignalForgeService::Service::SendFile(::grpc::ServerContext* context, const ::SignalForge::FileRequest* request, ::SignalForge::FileResponse* response) {
+  (void) context;
+  (void) request;
+  (void) response;
+  return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+}
+
+::grpc::Status SignalForgeService::Service::Register(::grpc::ServerContext* context, const ::SignalForge::RegisterRequest* request, ::SignalForge::RegisterResponse* response) {
+  (void) context;
+  (void) request;
+  (void) response;
+  return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+}
+
+::grpc::Status SignalForgeService::Service::Shutdown(::grpc::ServerContext* context, const ::SignalForge::ShutdownRequest* request, ::SignalForge::ShutdownResponse* response) {
   (void) context;
   (void) request;
   (void) response;

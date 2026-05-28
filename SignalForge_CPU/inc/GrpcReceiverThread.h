@@ -3,6 +3,7 @@
 #include <string>
 #include <memory>
 #include <thread>
+#include <set>
 
 #include "ThreadSafeQueue.h"
 
@@ -27,9 +28,20 @@ namespace SignalForge
             const FileRequest* request,
             FileResponse* response) override;
 
+        grpc::Status Register(grpc::ServerContext* context,
+            const RegisterRequest* request,
+            RegisterResponse* response) override;
+
+        grpc::Status Shutdown(grpc::ServerContext* context,
+            const ShutdownRequest* request,
+            ShutdownResponse* response) override;
+
     private:
         ThreadSafeQueue<std::string>& m_path_queue;
         std::string                   m_input_dir;
+
+        std::mutex              m_clients_mutex;
+        std::set<std::string>   m_registered_clients;
 
         // generates a unique filename: <unix_timestamp>_<random_hex>.wav
         static std::string GenerateFilename();

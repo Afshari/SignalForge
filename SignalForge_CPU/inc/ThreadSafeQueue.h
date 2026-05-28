@@ -53,6 +53,12 @@ namespace SignalForge {
 			return m_closed && m_queue.empty();
 		}
 
+		bool is_closed() const
+		{
+			std::lock_guard<std::mutex> lock(m_mutex);
+			return m_closed;
+		}
+
 	private:
 		std::queue<T>           m_queue;
 		mutable std::mutex      m_mutex;

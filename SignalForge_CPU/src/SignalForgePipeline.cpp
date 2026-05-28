@@ -52,8 +52,6 @@ namespace SignalForge {
 
 				while (auto path = m_path_queue.pop())
 				{
-					if (path->empty()) continue;
-
 					try
 					{
 						WavReader reader(*path);
@@ -196,7 +194,6 @@ namespace SignalForge {
 		// wait for scanner to finish, then stop gRPC and close queue
 		t_scanner.join();
 		m_grpc_receiver->Stop();
-		m_path_queue.close();
 		// All four jthreads go out of scope here and join automatically.
 		// Run() blocks until all threads have finished.
 	}

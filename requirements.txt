@@ -2,3 +2,5 @@ numpy==2.2.6
 scipy==1.15.3
 pytest
 pytest-cov
+grpcio 
+grpcio-tools

@@ -5,6 +5,7 @@
 #include "WavBatch.h"
 #include "FFTResult.h"
 #include "Config.h"
+#include "GrpcReceiverThread.h"
 
 namespace SignalForge {
 
@@ -24,6 +25,8 @@ namespace SignalForge {
         //   4. Redis writer    - stores hashes and magnitudes
         void Run();
 
+        void Stop();
+
     private:
         std::vector<std::string>     m_filepaths;
         Config                       m_config;
@@ -37,6 +40,8 @@ namespace SignalForge {
 
         // Stage 2->3: processed results ready for Redis
         ThreadSafeQueue<FFTResult>   m_result_queue;
+
+        std::unique_ptr<GrpcReceiverThread> m_grpc_receiver;
     };
 
 } // namespace SignalForge

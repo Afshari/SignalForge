@@ -58,7 +58,7 @@
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <WarningLevel>Level3</WarningLevel>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir)SignalForge_GPU\inc;$(SolutionDir)SignalForge_CPU\inc;$(VCPKG_ROOT)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)SignalForge_GPU\inc;$(SolutionDir)SignalForge_CPU\inc;$(VCPKG_ROOT)include;$(SolutionDir)SignalForge_Proto;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -96,7 +96,7 @@ xcopy /Y /I /E "$(SolutionDir)SignalForge_Tests\test_data" "$(OutDir)test_data"<
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir)SignalForge_GPU\inc;$(SolutionDir)SignalForge_CPU\inc;$(VCPKG_ROOT)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)SignalForge_GPU\inc;$(SolutionDir)SignalForge_CPU\inc;$(VCPKG_ROOT)include;$(SolutionDir)SignalForge_Proto;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -119,6 +119,7 @@ xcopy /Y /I /E "$(SolutionDir)SignalForge_Tests\test_data" "$(OutDir)test_data"<
     <ClCompile Include="CLParserTests.cpp" />
     <ClCompile Include="ConfigTests.cpp" />
     <ClCompile Include="FFTTests.cpp" />
+    <ClCompile Include="GrpcTests.cpp" />
     <ClCompile Include="PipelineTests.cpp" />
     <ClCompile Include="RedisClientTests.cpp" />
     <ClCompile Include="SHA256Tests.cpp" />

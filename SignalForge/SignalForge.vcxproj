@@ -100,16 +100,16 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions);_SILENCE_ALL_CXX17_DEPRECATION_WARNINGS;ABSL_LEGACY_THREAD_ANNOTATIONS</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir)inc;$(SolutionDir)SignalForge_CPU\inc;$(SolutionDir)SignalForge_GPU\inc;$(BOOST_ROOT);$(VCPKG_ROOT)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)inc;$(SolutionDir)SignalForge_CPU\inc;$(SolutionDir)SignalForge_GPU\inc;$(BOOST_ROOT);$(VCPKG_ROOT)\installed\x64-windows\include;$(SolutionDir)SignalForge_Proto;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(BOOST_ROOT)\lib64-msvc-14.3;$(CUDA_PATH)\lib\x64;$(VCPKG_ROOT)lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>cudart.lib;cuda.lib;cufft.lib;hiredis.lib;libboost_json-vc143-mt-gd-x64-1_91.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(BOOST_ROOT)\lib64-msvc-14.3;$(CUDA_PATH)\lib\x64;$(VCPKG_ROOT)\installed\x64-windows\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>cudart.lib;cuda.lib;cufft.lib;hiredis.lib;grpc.lib;grpc++.lib;libprotobuf.lib;gpr.lib;libboost_json-vc143-mt-gd-x64-1_91.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -118,16 +118,16 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions);_SILENCE_ALL_CXX17_DEPRECATION_WARNINGS;ABSL_LEGACY_THREAD_ANNOTATIONS</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir)inc;$(SolutionDir)SignalForge_CPU\inc;$(SolutionDir)SignalForge_GPU\inc;$(BOOST_ROOT);$(VCPKG_ROOT)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)inc;$(SolutionDir)SignalForge_CPU\inc;$(SolutionDir)SignalForge_GPU\inc;$(BOOST_ROOT);$(VCPKG_ROOT)\installed\x64-windows\include;$(SolutionDir)SignalForge_Proto;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(BOOST_ROOT)\lib64-msvc-14.3;$(CUDA_PATH)\lib\x64;$(VCPKG_ROOT)lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>cudart.lib;cuda.lib;cufft.lib;hiredis.lib;libboost_json-vc143-mt-x64-1_91.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(BOOST_ROOT)\lib64-msvc-14.3;$(CUDA_PATH)\lib\x64;$(VCPKG_ROOT)\installed\x64-windows\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>cudart.lib;cuda.lib;cufft.lib;hiredis.lib;grpc.lib;grpc++.lib;libprotobuf.lib;gpr.lib;libboost_json-vc143-mt-x64-1_91.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>

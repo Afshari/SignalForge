@@ -34,6 +34,31 @@ RUN git clone https://github.com/redis/hiredis.git && \
     cd ../.. && \
     rm -rf hiredis
 
+# gRPC and Protobuf from source - apt version too old, no CMake config files
+RUN apt-get update && apt-get install -y \
+    libssl-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN git clone --recurse-submodules -b v1.54.0 https://github.com/grpc/grpc.git && \
+    cd grpc && \
+    mkdir build && cd build && \
+    cmake .. \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DCMAKE_INSTALL_PREFIX=/usr/local \
+        -DgRPC_INSTALL=ON \
+        -DgRPC_BUILD_TESTS=OFF \
+        -DABSL_ENABLE_INSTALL=ON \
+        -DgRPC_PROTOBUF_PROVIDER=module \
+        -DgRPC_ABSL_PROVIDER=module \
+        -Dprotobuf_INSTALL=ON \
+        -Dprotobuf_BUILD_TESTS=OFF && \
+    make -j$(nproc) && \
+    make install && \
+    ldconfig && \
+    cd ../.. && \
+    rm -rf grpc
+
+
 # Copy requirements and install
 COPY requirements.txt .
 RUN pip3 install -r requirements.txt
@@ -42,13 +67,22 @@ RUN pip3 install -r requirements.txt
 WORKDIR /app
 COPY . .
 
+RUN protoc \
+    --proto_path=SignalForge_Proto \
+    --cpp_out=SignalForge_Proto \
+    --grpc_out=SignalForge_Proto \
+    --plugin=protoc-gen-grpc=/usr/local/bin/grpc_cpp_plugin \
+    SignalForge_Proto/SignalForge.proto
+
 # Build
 RUN mkdir -p build && cd build && \
     cmake .. \
         -DCMAKE_BUILD_TYPE=Release \
         -DCMAKE_CUDA_ARCHITECTURES=75 \
         -DBOOST_ROOT=/usr/local \
-        -DCMAKE_PREFIX_PATH=/usr/local && \
+        -DCMAKE_PREFIX_PATH="/usr/local" \
+        -DProtobuf_DIR=/usr/local/lib/cmake/protobuf \
+        -DgRPC_DIR=/usr/local/lib/cmake/grpc && \
     cmake --build . --config Release -j$(nproc)
     
 # Python venv setup

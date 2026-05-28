@@ -18,6 +18,7 @@ set(CPU_SOURCES
     src/WavReader.cpp
     src/RedisClient.cpp
     src/SignalForgePipeline.cpp
+    src/GrpcReceiverThread.cpp
     ../SignalForge_Proto/SignalForge.pb.cc
     ../SignalForge_Proto/SignalForge.grpc.pb.cc
 )

@@ -56,6 +56,7 @@ RUN mkdir -p build && cd build && \
         -DCMAKE_CUDA_ARCHITECTURES=75 \
         -DBOOST_ROOT=/usr/local \
         -DCMAKE_PREFIX_PATH=/usr/local && \
+        -DCMAKE_PREFIX_PATH="/usr/local;/usr" \
     cmake --build . --config Release -j$(nproc)
     
 # Python venv setup

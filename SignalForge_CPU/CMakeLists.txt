@@ -9,12 +9,17 @@ find_package(Boost 1.91 REQUIRED COMPONENTS json)
 find_package(hiredis CONFIG REQUIRED)
 link_directories(${Boost_LIBRARY_DIRS})
 
+find_package(gRPC CONFIG REQUIRED)
+find_package(Protobuf REQUIRED)
+
 set(CPU_SOURCES
     src/CLParser.cpp
     src/Config.cpp
     src/WavReader.cpp
     src/RedisClient.cpp
     src/SignalForgePipeline.cpp
+    ../SignalForge_Proto/SignalForge.pb.cc
+    ../SignalForge_Proto/SignalForge.grpc.pb.cc
 )
 
 add_library(SignalForge_CPU STATIC ${CPU_SOURCES})
@@ -22,12 +27,15 @@ add_library(SignalForge_CPU STATIC ${CPU_SOURCES})
 target_include_directories(SignalForge_CPU PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/inc
     ${CMAKE_CURRENT_SOURCE_DIR}/../SignalForge_GPU/inc
+    ${CMAKE_CURRENT_SOURCE_DIR}/../SignalForge_Proto
     ${Boost_INCLUDE_DIRS}
 )
 
 target_link_libraries(SignalForge_CPU PRIVATE
     Boost::json
     hiredis::hiredis
+    gRPC::grpc++
+    protobuf::libprotobuf
 )
 
 add_custom_command(TARGET SignalForge_CPU POST_BUILD

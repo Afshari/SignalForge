@@ -10,6 +10,9 @@ set(Boost_NO_WARN_NEW_VERSIONS 1)
 find_package(Boost 1.91 REQUIRED COMPONENTS json)
 link_directories(${Boost_LIBRARY_DIRS})
 
+find_package(gRPC CONFIG REQUIRED)
+find_package(Protobuf REQUIRED)
+
 # GoogleTest
 include(FetchContent)
 FetchContent_Declare(
@@ -28,6 +31,7 @@ set(TEST_SOURCES
     FFTTests.cpp
     RedisClientTests.cpp
     PipelineTests.cpp
+    GrpcTests.cpp
 )
 
 add_executable(SignalForge_Tests ${TEST_SOURCES})
@@ -36,6 +40,7 @@ target_include_directories(SignalForge_Tests PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/../SignalForge_CPU/inc
     ${CMAKE_CURRENT_SOURCE_DIR}/../SignalForge_GPU/inc
+    ${CMAKE_CURRENT_SOURCE_DIR}/../SignalForge_Proto
     ${Boost_INCLUDE_DIRS}
 )
 
@@ -48,6 +53,8 @@ target_link_libraries(SignalForge_Tests PRIVATE
     hiredis::hiredis
     gtest
     gtest_main
+    gRPC::grpc++
+    protobuf::libprotobuf
 )
 
 # Copy config.json and test_data next to test executable

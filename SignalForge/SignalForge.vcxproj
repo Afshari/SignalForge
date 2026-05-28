@@ -103,7 +103,7 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions);_SILENCE_ALL_CXX17_DEPRECATION_WARNINGS;ABSL_LEGACY_THREAD_ANNOTATIONS</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir)inc;$(SolutionDir)SignalForge_CPU\inc;$(SolutionDir)SignalForge_GPU\inc;$(BOOST_ROOT);$(VCPKG_ROOT)\installed\x64-windows\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)inc;$(SolutionDir)SignalForge_CPU\inc;$(SolutionDir)SignalForge_GPU\inc;$(BOOST_ROOT);$(VCPKG_ROOT)\installed\x64-windows\include;$(SolutionDir)SignalForge_Proto;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -121,7 +121,7 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions);_SILENCE_ALL_CXX17_DEPRECATION_WARNINGS;ABSL_LEGACY_THREAD_ANNOTATIONS</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir)inc;$(SolutionDir)SignalForge_CPU\inc;$(SolutionDir)SignalForge_GPU\inc;$(BOOST_ROOT);$(VCPKG_ROOT)\installed\x64-windows\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)inc;$(SolutionDir)SignalForge_CPU\inc;$(SolutionDir)SignalForge_GPU\inc;$(BOOST_ROOT);$(VCPKG_ROOT)\installed\x64-windows\include;$(SolutionDir)SignalForge_Proto;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

@@ -99,6 +99,10 @@ namespace SignalForge
 
     void GrpcReceiverThread::Stop()
     {
+        {
+            std::unique_lock<std::mutex> lock(m_server_mutex);
+            m_server_cv.wait(lock, [this] { return m_server_ready; });
+        }
         if (m_server)
         {
             m_server->Shutdown();
@@ -120,6 +124,12 @@ namespace SignalForge
         builder.RegisterService(&service);
 
         m_server = builder.BuildAndStart();
+
+        {
+            std::lock_guard<std::mutex> lock(m_server_mutex);
+            m_server_ready = true;
+        }
+        m_server_cv.notify_one();
 
         if (m_server)
         {

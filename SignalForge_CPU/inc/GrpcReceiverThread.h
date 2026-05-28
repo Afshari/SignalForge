@@ -56,6 +56,10 @@ namespace SignalForge
 
         std::unique_ptr<grpc::Server> m_server;
         std::thread                   m_thread;
+
+        std::mutex                    m_server_mutex;
+        std::condition_variable       m_server_cv;
+        bool                          m_server_ready;
     };
 
 } // namespace SignalForge

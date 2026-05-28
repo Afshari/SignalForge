@@ -10,6 +10,7 @@
 #include <iostream>
 #include <sstream>
 #include <vector>
+#include "SignalForgePipeline.h"
 
 namespace SignalForge {
 

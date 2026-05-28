@@ -191,11 +191,20 @@ namespace SignalForge {
 			});
 
 
-		// wait for scanner to finish, then stop gRPC and close queue
-		t_scanner.join();
+		if (!m_filepaths.empty())
+			t_scanner.join();
+		else
+			m_grpc_receiver->Wait(); // blocks until Ctrl+C calls Stop()
+
 		m_grpc_receiver->Stop();
 		// All four jthreads go out of scope here and join automatically.
 		// Run() blocks until all threads have finished.
+	}
+
+	void SignalForgePipeline::Stop()
+	{
+		if (m_grpc_receiver)
+			m_grpc_receiver->Stop();
 	}
 
 } // namespace SignalForge

@@ -25,6 +25,8 @@ namespace SignalForge {
         //   4. Redis writer    - stores hashes and magnitudes
         void Run();
 
+        void Stop();
+
     private:
         std::vector<std::string>     m_filepaths;
         Config                       m_config;

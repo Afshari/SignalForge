@@ -14,12 +14,14 @@ namespace SignalForge {
         bool IsProfileMode()  const  { return m_profileMode; }
         bool IsFftMode()      const  { return m_fftMode; }
         bool IsPipelineMode() const  { return m_pipelineMode; }
+        bool IsGrpcMode()     const  { return m_grpcMode; }
         const std::filesystem::path& GetConfigDir() const { return m_configDir; }
 
     private:
         bool                  m_profileMode = false;
         bool                  m_fftMode = false;
         bool                  m_pipelineMode = false;
+        bool                  m_grpcMode = false;
         std::filesystem::path m_configDir;
     };
 

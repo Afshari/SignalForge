@@ -1,0 +1,15 @@
+{
+    "server": {
+        "host": "localhost",
+        "port": 50051
+    },
+    "signal": {
+        "sample_rate": 44100,
+        "size_kb": 128
+    },
+    "batch": {
+        "clean": 4,
+        "noisy": 3,
+        "anomaly": 3
+    }
+}

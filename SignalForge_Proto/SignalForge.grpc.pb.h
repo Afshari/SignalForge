@@ -43,29 +43,11 @@ class SignalForgeService final {
     std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::SignalForge::FileResponse>> PrepareAsyncSendFile(::grpc::ClientContext* context, const ::SignalForge::FileRequest& request, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::SignalForge::FileResponse>>(PrepareAsyncSendFileRaw(context, request, cq));
     }
-    virtual ::grpc::Status Register(::grpc::ClientContext* context, const ::SignalForge::RegisterRequest& request, ::SignalForge::RegisterResponse* response) = 0;
-    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::SignalForge::RegisterResponse>> AsyncRegister(::grpc::ClientContext* context, const ::SignalForge::RegisterRequest& request, ::grpc::CompletionQueue* cq) {
-      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::SignalForge::RegisterResponse>>(AsyncRegisterRaw(context, request, cq));
-    }
-    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::SignalForge::RegisterResponse>> PrepareAsyncRegister(::grpc::ClientContext* context, const ::SignalForge::RegisterRequest& request, ::grpc::CompletionQueue* cq) {
-      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::SignalForge::RegisterResponse>>(PrepareAsyncRegisterRaw(context, request, cq));
-    }
-    virtual ::grpc::Status Shutdown(::grpc::ClientContext* context, const ::SignalForge::ShutdownRequest& request, ::SignalForge::ShutdownResponse* response) = 0;
-    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::SignalForge::ShutdownResponse>> AsyncShutdown(::grpc::ClientContext* context, const ::SignalForge::ShutdownRequest& request, ::grpc::CompletionQueue* cq) {
-      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::SignalForge::ShutdownResponse>>(AsyncShutdownRaw(context, request, cq));
-    }
-    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::SignalForge::ShutdownResponse>> PrepareAsyncShutdown(::grpc::ClientContext* context, const ::SignalForge::ShutdownRequest& request, ::grpc::CompletionQueue* cq) {
-      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::SignalForge::ShutdownResponse>>(PrepareAsyncShutdownRaw(context, request, cq));
-    }
     class async_interface {
      public:
       virtual ~async_interface() {}
       virtual void SendFile(::grpc::ClientContext* context, const ::SignalForge::FileRequest* request, ::SignalForge::FileResponse* response, std::function<void(::grpc::Status)>) = 0;
       virtual void SendFile(::grpc::ClientContext* context, const ::SignalForge::FileRequest* request, ::SignalForge::FileResponse* response, ::grpc::ClientUnaryReactor* reactor) = 0;
-      virtual void Register(::grpc::ClientContext* context, const ::SignalForge::RegisterRequest* request, ::SignalForge::RegisterResponse* response, std::function<void(::grpc::Status)>) = 0;
-      virtual void Register(::grpc::ClientContext* context, const ::SignalForge::RegisterRequest* request, ::SignalForge::RegisterResponse* response, ::grpc::ClientUnaryReactor* reactor) = 0;
-      virtual void Shutdown(::grpc::ClientContext* context, const ::SignalForge::ShutdownRequest* request, ::SignalForge::ShutdownResponse* response, std::function<void(::grpc::Status)>) = 0;
-      virtual void Shutdown(::grpc::ClientContext* context, const ::SignalForge::ShutdownRequest* request, ::SignalForge::ShutdownResponse* response, ::grpc::ClientUnaryReactor* reactor) = 0;
     };
     typedef class async_interface experimental_async_interface;
     virtual class async_interface* async() { return nullptr; }
@@ -73,10 +55,6 @@ class SignalForgeService final {
    private:
     virtual ::grpc::ClientAsyncResponseReaderInterface< ::SignalForge::FileResponse>* AsyncSendFileRaw(::grpc::ClientContext* context, const ::SignalForge::FileRequest& request, ::grpc::CompletionQueue* cq) = 0;
     virtual ::grpc::ClientAsyncResponseReaderInterface< ::SignalForge::FileResponse>* PrepareAsyncSendFileRaw(::grpc::ClientContext* context, const ::SignalForge::FileRequest& request, ::grpc::CompletionQueue* cq) = 0;
-    virtual ::grpc::ClientAsyncResponseReaderInterface< ::SignalForge::RegisterResponse>* AsyncRegisterRaw(::grpc::ClientContext* context, const ::SignalForge::RegisterRequest& request, ::grpc::CompletionQueue* cq) = 0;
-    virtual ::grpc::ClientAsyncResponseReaderInterface< ::SignalForge::RegisterResponse>* PrepareAsyncRegisterRaw(::grpc::ClientContext* context, const ::SignalForge::RegisterRequest& request, ::grpc::CompletionQueue* cq) = 0;
-    virtual ::grpc::ClientAsyncResponseReaderInterface< ::SignalForge::ShutdownResponse>* AsyncShutdownRaw(::grpc::ClientContext* context, const ::SignalForge::ShutdownRequest& request, ::grpc::CompletionQueue* cq) = 0;
-    virtual ::grpc::ClientAsyncResponseReaderInterface< ::SignalForge::ShutdownResponse>* PrepareAsyncShutdownRaw(::grpc::ClientContext* context, const ::SignalForge::ShutdownRequest& request, ::grpc::CompletionQueue* cq) = 0;
   };
   class Stub final : public StubInterface {
    public:
@@ -88,29 +66,11 @@ class SignalForgeService final {
     std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::SignalForge::FileResponse>> PrepareAsyncSendFile(::grpc::ClientContext* context, const ::SignalForge::FileRequest& request, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::SignalForge::FileResponse>>(PrepareAsyncSendFileRaw(context, request, cq));
     }
-    ::grpc::Status Register(::grpc::ClientContext* context, const ::SignalForge::RegisterRequest& request, ::SignalForge::RegisterResponse* response) override;
-    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::SignalForge::RegisterResponse>> AsyncRegister(::grpc::ClientContext* context, const ::SignalForge::RegisterRequest& request, ::grpc::CompletionQueue* cq) {
-      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::SignalForge::RegisterResponse>>(AsyncRegisterRaw(context, request, cq));
-    }
-    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::SignalForge::RegisterResponse>> PrepareAsyncRegister(::grpc::ClientContext* context, const ::SignalForge::RegisterRequest& request, ::grpc::CompletionQueue* cq) {
-      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::SignalForge::RegisterResponse>>(PrepareAsyncRegisterRaw(context, request, cq));
-    }
-    ::grpc::Status Shutdown(::grpc::ClientContext* context, const ::SignalForge::ShutdownRequest& request, ::SignalForge::ShutdownResponse* response) override;
-    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::SignalForge::ShutdownResponse>> AsyncShutdown(::grpc::ClientContext* context, const ::SignalForge::ShutdownRequest& request, ::grpc::CompletionQueue* cq) {
-      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::SignalForge::ShutdownResponse>>(AsyncShutdownRaw(context, request, cq));
-    }
-    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::SignalForge::ShutdownResponse>> PrepareAsyncShutdown(::grpc::ClientContext* context, const ::SignalForge::ShutdownRequest& request, ::grpc::CompletionQueue* cq) {
-      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::SignalForge::ShutdownResponse>>(PrepareAsyncShutdownRaw(context, request, cq));
-    }
     class async final :
       public StubInterface::async_interface {
      public:
       void SendFile(::grpc::ClientContext* context, const ::SignalForge::FileRequest* request, ::SignalForge::FileResponse* response, std::function<void(::grpc::Status)>) override;
       void SendFile(::grpc::ClientContext* context, const ::SignalForge::FileRequest* request, ::SignalForge::FileResponse* response, ::grpc::ClientUnaryReactor* reactor) override;
-      void Register(::grpc::ClientContext* context, const ::SignalForge::RegisterRequest* request, ::SignalForge::RegisterResponse* response, std::function<void(::grpc::Status)>) override;
-      void Register(::grpc::ClientContext* context, const ::SignalForge::RegisterRequest* request, ::SignalForge::RegisterResponse* response, ::grpc::ClientUnaryReactor* reactor) override;
-      void Shutdown(::grpc::ClientContext* context, const ::SignalForge::ShutdownRequest* request, ::SignalForge::ShutdownResponse* response, std::function<void(::grpc::Status)>) override;
-      void Shutdown(::grpc::ClientContext* context, const ::SignalForge::ShutdownRequest* request, ::SignalForge::ShutdownResponse* response, ::grpc::ClientUnaryReactor* reactor) override;
      private:
       friend class Stub;
       explicit async(Stub* stub): stub_(stub) { }
@@ -124,13 +84,7 @@ class SignalForgeService final {
     class async async_stub_{this};
     ::grpc::ClientAsyncResponseReader< ::SignalForge::FileResponse>* AsyncSendFileRaw(::grpc::ClientContext* context, const ::SignalForge::FileRequest& request, ::grpc::CompletionQueue* cq) override;
     ::grpc::ClientAsyncResponseReader< ::SignalForge::FileResponse>* PrepareAsyncSendFileRaw(::grpc::ClientContext* context, const ::SignalForge::FileRequest& request, ::grpc::CompletionQueue* cq) override;
-    ::grpc::ClientAsyncResponseReader< ::SignalForge::RegisterResponse>* AsyncRegisterRaw(::grpc::ClientContext* context, const ::SignalForge::RegisterRequest& request, ::grpc::CompletionQueue* cq) override;
-    ::grpc::ClientAsyncResponseReader< ::SignalForge::RegisterResponse>* PrepareAsyncRegisterRaw(::grpc::ClientContext* context, const ::SignalForge::RegisterRequest& request, ::grpc::CompletionQueue* cq) override;
-    ::grpc::ClientAsyncResponseReader< ::SignalForge::ShutdownResponse>* AsyncShutdownRaw(::grpc::ClientContext* context, const ::SignalForge::ShutdownRequest& request, ::grpc::CompletionQueue* cq) override;
-    ::grpc::ClientAsyncResponseReader< ::SignalForge::ShutdownResponse>* PrepareAsyncShutdownRaw(::grpc::ClientContext* context, const ::SignalForge::ShutdownRequest& request, ::grpc::CompletionQueue* cq) override;
     const ::grpc::internal::RpcMethod rpcmethod_SendFile_;
-    const ::grpc::internal::RpcMethod rpcmethod_Register_;
-    const ::grpc::internal::RpcMethod rpcmethod_Shutdown_;
   };
   static std::unique_ptr<Stub> NewStub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const ::grpc::StubOptions& options = ::grpc::StubOptions());
 
@@ -139,8 +93,6 @@ class SignalForgeService final {
     Service();
     virtual ~Service();
     virtual ::grpc::Status SendFile(::grpc::ServerContext* context, const ::SignalForge::FileRequest* request, ::SignalForge::FileResponse* response);
-    virtual ::grpc::Status Register(::grpc::ServerContext* context, const ::SignalForge::RegisterRequest* request, ::SignalForge::RegisterResponse* response);
-    virtual ::grpc::Status Shutdown(::grpc::ServerContext* context, const ::SignalForge::ShutdownRequest* request, ::SignalForge::ShutdownResponse* response);
   };
   template <class BaseClass>
   class WithAsyncMethod_SendFile : public BaseClass {
@@ -162,47 +114,7 @@ class SignalForgeService final {
       ::grpc::Service::RequestAsyncUnary(0, context, request, response, new_call_cq, notification_cq, tag);
     }
   };
-  template <class BaseClass>
-  class WithAsyncMethod_Register : public BaseClass {
-   private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
-   public:
-    WithAsyncMethod_Register() {
-      ::grpc::Service::MarkMethodAsync(1);
-    }
-    ~WithAsyncMethod_Register() override {
-      BaseClassMustBeDerivedFromService(this);
-    }
-    // disable synchronous version of this method
-    ::grpc::Status Register(::grpc::ServerContext* /*context*/, const ::SignalForge::RegisterRequest* /*request*/, ::SignalForge::RegisterResponse* /*response*/) override {
-      abort();
-      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
-    }
-    void RequestRegister(::grpc::ServerContext* context, ::SignalForge::RegisterRequest* request, ::grpc::ServerAsyncResponseWriter< ::SignalForge::RegisterResponse>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
-      ::grpc::Service::RequestAsyncUnary(1, context, request, response, new_call_cq, notification_cq, tag);
-    }
-  };
-  template <class BaseClass>
-  class WithAsyncMethod_Shutdown : public BaseClass {
-   private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
-   public:
-    WithAsyncMethod_Shutdown() {
-      ::grpc::Service::MarkMethodAsync(2);
-    }
-    ~WithAsyncMethod_Shutdown() override {
-      BaseClassMustBeDerivedFromService(this);
-    }
-    // disable synchronous version of this method
-    ::grpc::Status Shutdown(::grpc::ServerContext* /*context*/, const ::SignalForge::ShutdownRequest* /*request*/, ::SignalForge::ShutdownResponse* /*response*/) override {
-      abort();
-      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
-    }
-    void RequestShutdown(::grpc::ServerContext* context, ::SignalForge::ShutdownRequest* request, ::grpc::ServerAsyncResponseWriter< ::SignalForge::ShutdownResponse>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
-      ::grpc::Service::RequestAsyncUnary(2, context, request, response, new_call_cq, notification_cq, tag);
-    }
-  };
-  typedef WithAsyncMethod_SendFile<WithAsyncMethod_Register<WithAsyncMethod_Shutdown<Service > > > AsyncService;
+  typedef WithAsyncMethod_SendFile<Service > AsyncService;
   template <class BaseClass>
   class WithCallbackMethod_SendFile : public BaseClass {
    private:
@@ -230,61 +142,7 @@ class SignalForgeService final {
     virtual ::grpc::ServerUnaryReactor* SendFile(
       ::grpc::CallbackServerContext* /*context*/, const ::SignalForge::FileRequest* /*request*/, ::SignalForge::FileResponse* /*response*/)  { return nullptr; }
   };
-  template <class BaseClass>
-  class WithCallbackMethod_Register : public BaseClass {
-   private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
-   public:
-    WithCallbackMethod_Register() {
-      ::grpc::Service::MarkMethodCallback(1,
-          new ::grpc::internal::CallbackUnaryHandler< ::SignalForge::RegisterRequest, ::SignalForge::RegisterResponse>(
-            [this](
-                   ::grpc::CallbackServerContext* context, const ::SignalForge::RegisterRequest* request, ::SignalForge::RegisterResponse* response) { return this->Register(context, request, response); }));}
-    void SetMessageAllocatorFor_Register(
-        ::grpc::MessageAllocator< ::SignalForge::RegisterRequest, ::SignalForge::RegisterResponse>* allocator) {
-      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(1);
-      static_cast<::grpc::internal::CallbackUnaryHandler< ::SignalForge::RegisterRequest, ::SignalForge::RegisterResponse>*>(handler)
-              ->SetMessageAllocator(allocator);
-    }
-    ~WithCallbackMethod_Register() override {
-      BaseClassMustBeDerivedFromService(this);
-    }
-    // disable synchronous version of this method
-    ::grpc::Status Register(::grpc::ServerContext* /*context*/, const ::SignalForge::RegisterRequest* /*request*/, ::SignalForge::RegisterResponse* /*response*/) override {
-      abort();
-      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
-    }
-    virtual ::grpc::ServerUnaryReactor* Register(
-      ::grpc::CallbackServerContext* /*context*/, const ::SignalForge::RegisterRequest* /*request*/, ::SignalForge::RegisterResponse* /*response*/)  { return nullptr; }
-  };
-  template <class BaseClass>
-  class WithCallbackMethod_Shutdown : public BaseClass {
-   private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
-   public:
-    WithCallbackMethod_Shutdown() {
-      ::grpc::Service::MarkMethodCallback(2,
-          new ::grpc::internal::CallbackUnaryHandler< ::SignalForge::ShutdownRequest, ::SignalForge::ShutdownResponse>(
-            [this](
-                   ::grpc::CallbackServerContext* context, const ::SignalForge::ShutdownRequest* request, ::SignalForge::ShutdownResponse* response) { return this->Shutdown(context, request, response); }));}
-    void SetMessageAllocatorFor_Shutdown(
-        ::grpc::MessageAllocator< ::SignalForge::ShutdownRequest, ::SignalForge::ShutdownResponse>* allocator) {
-      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(2);
-      static_cast<::grpc::internal::CallbackUnaryHandler< ::SignalForge::ShutdownRequest, ::SignalForge::ShutdownResponse>*>(handler)
-              ->SetMessageAllocator(allocator);
-    }
-    ~WithCallbackMethod_Shutdown() override {
-      BaseClassMustBeDerivedFromService(this);
-    }
-    // disable synchronous version of this method
-    ::grpc::Status Shutdown(::grpc::ServerContext* /*context*/, const ::SignalForge::ShutdownRequest* /*request*/, ::SignalForge::ShutdownResponse* /*response*/) override {
-      abort();
-      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
-    }
-    virtual ::grpc::ServerUnaryReactor* Shutdown(
-      ::grpc::CallbackServerContext* /*context*/, const ::SignalForge::ShutdownRequest* /*request*/, ::SignalForge::ShutdownResponse* /*response*/)  { return nullptr; }
-  };
-  typedef WithCallbackMethod_SendFile<WithCallbackMethod_Register<WithCallbackMethod_Shutdown<Service > > > CallbackService;
+  typedef WithCallbackMethod_SendFile<Service > CallbackService;
   typedef CallbackService ExperimentalCallbackService;
   template <class BaseClass>
   class WithGenericMethod_SendFile : public BaseClass {
@@ -299,40 +157,6 @@ class SignalForgeService final {
     }
     // disable synchronous version of this method
     ::grpc::Status SendFile(::grpc::ServerContext* /*context*/, const ::SignalForge::FileRequest* /*request*/, ::SignalForge::FileResponse* /*response*/) override {
-      abort();
-      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
-    }
-  };
-  template <class BaseClass>
-  class WithGenericMethod_Register : public BaseClass {
-   private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
-   public:
-    WithGenericMethod_Register() {
-      ::grpc::Service::MarkMethodGeneric(1);
-    }
-    ~WithGenericMethod_Register() override {
-      BaseClassMustBeDerivedFromService(this);
-    }
-    // disable synchronous version of this method
-    ::grpc::Status Register(::grpc::ServerContext* /*context*/, const ::SignalForge::RegisterRequest* /*request*/, ::SignalForge::RegisterResponse* /*response*/) override {
-      abort();
-      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
-    }
-  };
-  template <class BaseClass>
-  class WithGenericMethod_Shutdown : public BaseClass {
-   private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
-   public:
-    WithGenericMethod_Shutdown() {
-      ::grpc::Service::MarkMethodGeneric(2);
-    }
-    ~WithGenericMethod_Shutdown() override {
-      BaseClassMustBeDerivedFromService(this);
-    }
-    // disable synchronous version of this method
-    ::grpc::Status Shutdown(::grpc::ServerContext* /*context*/, const ::SignalForge::ShutdownRequest* /*request*/, ::SignalForge::ShutdownResponse* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -358,46 +182,6 @@ class SignalForgeService final {
     }
   };
   template <class BaseClass>
-  class WithRawMethod_Register : public BaseClass {
-   private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
-   public:
-    WithRawMethod_Register() {
-      ::grpc::Service::MarkMethodRaw(1);
-    }
-    ~WithRawMethod_Register() override {
-      BaseClassMustBeDerivedFromService(this);
-    }
-    // disable synchronous version of this method
-    ::grpc::Status Register(::grpc::ServerContext* /*context*/, const ::SignalForge::RegisterRequest* /*request*/, ::SignalForge::RegisterResponse* /*response*/) override {
-      abort();
-      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
-    }
-    void RequestRegister(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncResponseWriter< ::grpc::ByteBuffer>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
-      ::grpc::Service::RequestAsyncUnary(1, context, request, response, new_call_cq, notification_cq, tag);
-    }
-  };
-  template <class BaseClass>
-  class WithRawMethod_Shutdown : public BaseClass {
-   private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
-   public:
-    WithRawMethod_Shutdown() {
-      ::grpc::Service::MarkMethodRaw(2);
-    }
-    ~WithRawMethod_Shutdown() override {
-      BaseClassMustBeDerivedFromService(this);
-    }
-    // disable synchronous version of this method
-    ::grpc::Status Shutdown(::grpc::ServerContext* /*context*/, const ::SignalForge::ShutdownRequest* /*request*/, ::SignalForge::ShutdownResponse* /*response*/) override {
-      abort();
-      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
-    }
-    void RequestShutdown(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncResponseWriter< ::grpc::ByteBuffer>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
-      ::grpc::Service::RequestAsyncUnary(2, context, request, response, new_call_cq, notification_cq, tag);
-    }
-  };
-  template <class BaseClass>
   class WithRawCallbackMethod_SendFile : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
@@ -417,50 +201,6 @@ class SignalForgeService final {
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
     virtual ::grpc::ServerUnaryReactor* SendFile(
-      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
-  };
-  template <class BaseClass>
-  class WithRawCallbackMethod_Register : public BaseClass {
-   private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
-   public:
-    WithRawCallbackMethod_Register() {
-      ::grpc::Service::MarkMethodRawCallback(1,
-          new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
-            [this](
-                   ::grpc::CallbackServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->Register(context, request, response); }));
-    }
-    ~WithRawCallbackMethod_Register() override {
-      BaseClassMustBeDerivedFromService(this);
-    }
-    // disable synchronous version of this method
-    ::grpc::Status Register(::grpc::ServerContext* /*context*/, const ::SignalForge::RegisterRequest* /*request*/, ::SignalForge::RegisterResponse* /*response*/) override {
-      abort();
-      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
-    }
-    virtual ::grpc::ServerUnaryReactor* Register(
-      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
-  };
-  template <class BaseClass>
-  class WithRawCallbackMethod_Shutdown : public BaseClass {
-   private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
-   public:
-    WithRawCallbackMethod_Shutdown() {
-      ::grpc::Service::MarkMethodRawCallback(2,
-          new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
-            [this](
-                   ::grpc::CallbackServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->Shutdown(context, request, response); }));
-    }
-    ~WithRawCallbackMethod_Shutdown() override {
-      BaseClassMustBeDerivedFromService(this);
-    }
-    // disable synchronous version of this method
-    ::grpc::Status Shutdown(::grpc::ServerContext* /*context*/, const ::SignalForge::ShutdownRequest* /*request*/, ::SignalForge::ShutdownResponse* /*response*/) override {
-      abort();
-      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
-    }
-    virtual ::grpc::ServerUnaryReactor* Shutdown(
       ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
@@ -490,63 +230,9 @@ class SignalForgeService final {
     // replace default version of method with streamed unary
     virtual ::grpc::Status StreamedSendFile(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::SignalForge::FileRequest,::SignalForge::FileResponse>* server_unary_streamer) = 0;
   };
-  template <class BaseClass>
-  class WithStreamedUnaryMethod_Register : public BaseClass {
-   private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
-   public:
-    WithStreamedUnaryMethod_Register() {
-      ::grpc::Service::MarkMethodStreamed(1,
-        new ::grpc::internal::StreamedUnaryHandler<
-          ::SignalForge::RegisterRequest, ::SignalForge::RegisterResponse>(
-            [this](::grpc::ServerContext* context,
-                   ::grpc::ServerUnaryStreamer<
-                     ::SignalForge::RegisterRequest, ::SignalForge::RegisterResponse>* streamer) {
-                       return this->StreamedRegister(context,
-                         streamer);
-                  }));
-    }
-    ~WithStreamedUnaryMethod_Register() override {
-      BaseClassMustBeDerivedFromService(this);
-    }
-    // disable regular version of this method
-    ::grpc::Status Register(::grpc::ServerContext* /*context*/, const ::SignalForge::RegisterRequest* /*request*/, ::SignalForge::RegisterResponse* /*response*/) override {
-      abort();
-      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
-    }
-    // replace default version of method with streamed unary
-    virtual ::grpc::Status StreamedRegister(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::SignalForge::RegisterRequest,::SignalForge::RegisterResponse>* server_unary_streamer) = 0;
-  };
-  template <class BaseClass>
-  class WithStreamedUnaryMethod_Shutdown : public BaseClass {
-   private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
-   public:
-    WithStreamedUnaryMethod_Shutdown() {
-      ::grpc::Service::MarkMethodStreamed(2,
-        new ::grpc::internal::StreamedUnaryHandler<
-          ::SignalForge::ShutdownRequest, ::SignalForge::ShutdownResponse>(
-            [this](::grpc::ServerContext* context,
-                   ::grpc::ServerUnaryStreamer<
-                     ::SignalForge::ShutdownRequest, ::SignalForge::ShutdownResponse>* streamer) {
-                       return this->StreamedShutdown(context,
-                         streamer);
-                  }));
-    }
-    ~WithStreamedUnaryMethod_Shutdown() override {
-      BaseClassMustBeDerivedFromService(this);
-    }
-    // disable regular version of this method
-    ::grpc::Status Shutdown(::grpc::ServerContext* /*context*/, const ::SignalForge::ShutdownRequest* /*request*/, ::SignalForge::ShutdownResponse* /*response*/) override {
-      abort();
-      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
-    }
-    // replace default version of method with streamed unary
-    virtual ::grpc::Status StreamedShutdown(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::SignalForge::ShutdownRequest,::SignalForge::ShutdownResponse>* server_unary_streamer) = 0;
-  };
-  typedef WithStreamedUnaryMethod_SendFile<WithStreamedUnaryMethod_Register<WithStreamedUnaryMethod_Shutdown<Service > > > StreamedUnaryService;
+  typedef WithStreamedUnaryMethod_SendFile<Service > StreamedUnaryService;
   typedef Service SplitStreamedService;
-  typedef WithStreamedUnaryMethod_SendFile<WithStreamedUnaryMethod_Register<WithStreamedUnaryMethod_Shutdown<Service > > > StreamedService;
+  typedef WithStreamedUnaryMethod_SendFile<Service > StreamedService;
 };
 
 }  // namespace SignalForge

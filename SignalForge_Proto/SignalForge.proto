@@ -3,9 +3,7 @@ syntax = "proto3";
 package SignalForge;
 
 service SignalForgeService {
-    rpc SendFile    (FileRequest)      returns (FileResponse);
-    rpc Register    (RegisterRequest)  returns (RegisterResponse);
-    rpc Shutdown    (ShutdownRequest)  returns (ShutdownResponse);
+    rpc SendFile (FileRequest) returns (FileResponse);
 }
 
 message FileRequest {
@@ -13,22 +11,6 @@ message FileRequest {
 }
 
 message FileResponse {
-    bool   accepted = 1;
-    string message  = 2;
-}
-
-message RegisterRequest  {}
-
-message RegisterResponse {
-    bool   accepted  = 1;
-    string client_id = 2;
-}
-
-message ShutdownRequest {
-    string client_id = 1;
-}
-
-message ShutdownResponse {
     bool   accepted = 1;
     string message  = 2;
 }

@@ -74,3 +74,8 @@ build/
 googletest/
 googlemock/
 _deps/
+
+# ML
+*.pt
+anomaly_threshold.txt
+signalforge_scaler.npz

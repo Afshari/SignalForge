@@ -8,6 +8,7 @@ services:
     command: redis-server --save 900 1 --save 300 10 --save 60 10000
 
   signalforge:
+    image: signalforge:latest
     build: .
     depends_on:
       - redis

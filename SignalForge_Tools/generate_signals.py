@@ -21,9 +21,10 @@ HARMONICS = [
 ]
 
 # Anomaly frequency spike - simulates engine knock
-ANOMALY_FREQUENCY_HZ = 1350.0
-ANOMALY_AMPLITUDE    = 0.35
-
+ANOMALY_FREQUENCY_HZ          = 1350.0
+ANOMALY_AMPLITUDE              = 2.0
+ANOMALY_SUBHARMONIC_HZ        = 40.0
+ANOMALY_SUBHARMONIC_AMPLITUDE = 0.5
 
 # --------------------------------------------------------------------------------
 def load_params(params_file: str) -> dict:
@@ -65,6 +66,7 @@ def generate_anomaly_signal(num_samples: int, sample_rate: int) -> np.ndarray:
     signal  = generate_clean_signal(num_samples, sample_rate)
     t       = np.linspace(0, num_samples / sample_rate, num_samples, endpoint=False)
     signal += ANOMALY_AMPLITUDE * np.sin(2.0 * np.pi * ANOMALY_FREQUENCY_HZ * t)
+    signal += ANOMALY_SUBHARMONIC_AMPLITUDE * np.sin(2.0 * np.pi * ANOMALY_SUBHARMONIC_HZ * t)
     signal += np.random.normal(0, 0.03, num_samples)
     max_val = np.max(np.abs(signal))
     if max_val > 0:

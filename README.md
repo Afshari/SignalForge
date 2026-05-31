@@ -15,11 +15,7 @@ In a distributed system ingesting signal recordings from multiple sources, two r
 
 ## Pipeline Architecture
 
-```
-[Scanner thread]       \
-                        --> [m_path_queue] --> [Reader] --> [m_wav_queue] --> [GPU worker] --> [m_result_queue] --> [Redis writer]
-[gRPC receiver]        /
-```
+![Pipeline Architecture](docs/pipeline.svg)
 
 **Stage 1 — Ingestion (two producers in parallel):**
 - Scanner thread reads existing WAV files from `input_dir`

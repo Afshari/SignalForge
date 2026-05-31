@@ -93,71 +93,46 @@ SignalForge/
 | OS              | Windows 10/11, Ubuntu 22.04, Docker               |
 ---
 
-## Build
+## Build & Run
+
+![Build Flow](docs/build_flow.svg)
 
 ### Windows (Visual Studio)
 
-Open `SignalForge.sln` in Visual Studio 2022, select `x64 / Release`, and build the solution. Output lands in `x64/Release/`.
+Open `SignalForge.sln` in Visual Studio 2022, select `x64 / Release`, build with `Ctrl+Shift+B`.
 
-Install dependencies via vcpkg:
-```bash
-vcpkg install grpc:x64-windows
-vcpkg install hiredis:x64-windows
-```
-
-### Linux (CMake)
+### Linux / Docker
 
 ```bash
-mkdir build && cd build
-cmake .. \
-    -DCMAKE_BUILD_TYPE=Release \
-    -DCMAKE_CUDA_ARCHITECTURES=75 \
-    -DBOOST_ROOT=/usr/local \
-    -DCMAKE_PREFIX_PATH="/usr/local"
-cmake --build . --config Release -j$(nproc)
+docker compose build
+docker compose run signalforge
 ```
 
-### Docker
+### Run
 
 ```bash
-docker-compose build
-docker-compose run --rm --entrypoint /bin/bash signalforge -c \
-    "cd /app/x64/Release && ./SignalForge_Tests"
+# SHA-256 only (Windows)
+SignalForge.exe
+
+# SHA-256 + FFT (Windows)
+SignalForge.exe --fft
+
+# Full multithreaded pipeline (Windows)
+SignalForge.exe --pipeline
+
+# gRPC distributed mode (Windows)
+SignalForge.exe --grpc
+
+# Profiling mode (Windows)
+SignalForge.exe --profile
+
+# Custom config directory (Windows)
+SignalForge.exe --config path/to/config
+
+# Linux / Docker — same flags, replace SignalForge.exe with ./SignalForge
 ```
 
----
-
-## Run
-
-### Local pipeline (scan input directory)
-```bash
-./SignalForge --pipeline
-```
-
-### Distributed mode (receive files via gRPC)
-```bash
-# Terminal 1 -- start the server
-./SignalForge --grpc
-
-# Terminal 2 -- send files from Python client
-cd SignalForge_Tools
-python grpc_client.py
-```
-
-### SHA-256 only
-```bash
-./SignalForge
-```
-
-### SHA-256 + FFT
-```bash
-./SignalForge --fft
-```
-
-### Profiling mode
-```bash
-./SignalForge --profile
-```
+For detailed commands, cleanup, and troubleshooting → [DEVGUIDE.md](DEVGUIDE.md)
 
 ---
 

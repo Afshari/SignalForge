@@ -59,52 +59,38 @@ Full ML details → [SignalForge_ML/README.md](SignalForge_ML/README.md)
 ## Project Structure
 
 ```
-SignalForge/                  -- main executable (C++)
-SignalForge_CPU/              -- CPU-side pipeline, gRPC receiver, Redis client
-SignalForge_GPU/              -- CUDA kernels: SHA-256, cuFFT
-SignalForge_Tests/            -- GoogleTest unit + integration tests (90 passing)
-SignalForge_ML/               -- PyTorch LSTM autoencoder (anomaly detection)
-SignalForge_Tools/            -- Python signal generator and gRPC client
-SignalForge_Bench/            -- Python NCU/nsys benchmarking tools
-SignalForge_Proto/            -- Protobuf definitions and generated stubs
-CMakeLists.txt                -- root CMake (Linux/Docker)
-Dockerfile
-docker-compose.yml
-config.json
-DEVGUIDE.md                   -- developer operations guide
+SignalForge/
+├── SignalForge/               # Entry point (main.cpp)
+├── SignalForge_CPU/           # Pipeline, gRPC receiver, Redis client
+├── SignalForge_GPU/           # CUDA kernels: SHA-256, cuFFT
+├── SignalForge_Tests/         # GoogleTest unit and integration tests
+├── SignalForge_ML/            # PyTorch LSTM autoencoder (anomaly detection)
+├── SignalForge_Tools/         # Python signal generator and gRPC client
+├── SignalForge_Bench/         # NCU/nsys benchmarking tools
+├── SignalForge_Proto/         # Protobuf definitions and generated stubs
+├── docs/                      # Diagrams and documentation assets
+├── config.json                # Runtime configuration
+├── CMakeLists.txt             # Linux/Docker build
+├── Dockerfile
+├── docker-compose.yml
+└── DEVGUIDE.md                # Developer operations guide
 ```
-
----
-
-## Tech Stack
-
-| Component       | Technology                        |
-|-----------------|-----------------------------------|
-| Language        | C++20, Python 3.10                |
-| GPU compute     | CUDA 12.0, cuFFT                  |
-| Distributed RPC | gRPC 1.54 + Protobuf              |
-| Caching         | Redis 7 (hiredis)                 |
-| ML              | PyTorch, LSTM autoencoder         |
-| Config          | Boost.JSON                        |
-| Testing         | GoogleTest (90 tests)             |
-| Build           | CMake, Visual Studio 2022         |
-| Deployment      | Docker, Docker Compose            |
-| Target hardware | AWS g4dn.xlarge (NVIDIA Tesla T4) |
 
 ---
 
 ## Requirements
 
-- NVIDIA GPU with CUDA support (tested on Tesla T4 sm_75 and RTX 3060 sm_86)
-- CUDA Toolkit 12.0+
-- C++20 compiler (MSVC on Windows, GCC on Linux)
-- CMake 3.20+ (Linux / Docker)
-- Boost 1.91+ (Boost.JSON)
-- hiredis
-- gRPC 1.54+ with Protobuf
-- Redis server
-- Python 3.10+ with PyTorch (ML module)
-
+| Component       | Details                                           |
+|-----------------|---------------------------------------------------|
+| GPU             | NVIDIA CUDA-capable (tested on Tesla T4, RTX 3060) |
+| CUDA Toolkit    | 12.0+                                             |
+| Compiler        | C++20 (MSVC on Windows, GCC on Linux)             |
+| Build           | CMake 3.20+                                       |
+| Boost           | 1.91+ (Boost.JSON)                                |
+| Redis           | 7+ (hiredis client)                               |
+| gRPC            | 1.54+ with Protobuf                               |
+| Python          | 3.10+ with PyTorch (ML module)                    |
+| OS              | Windows 10/11, Ubuntu 22.04, Docker               |
 ---
 
 ## Build
@@ -210,5 +196,6 @@ x64\Release\SignalForge_Tests.exe
 ```
 
 ## Credits
+[cuFFT](https://developer.nvidia.com/cufft) by NVIDIA Corporation. Used for GPU-accelerated Fast Fourier Transform batch processing.
 
 SHA-256 GPU implementation based on code from [VanitySearch](https://github.com/JeanLucPons/VanitySearch) by Jean-Luc Pons, licensed under GPL-3.0.

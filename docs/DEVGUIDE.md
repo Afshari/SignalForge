@@ -4,9 +4,7 @@ A GPU-accelerated distributed signal processing pipeline built with CUDA, cuFFT,
 
 ## Architecture
 
-```
-[Scanner / gRPC] -> m_path_queue -> [Reader threads] -> m_wav_queue -> [GPU worker: SHA-256 + FFT] -> m_result_queue -> [Redis writer]
-```
+![Pipeline Architecture](assets/pipeline.svg)
 
 ### Pipeline stages
 - **Scanner** -- reads file paths from local directory (gRPC will add remote files later)
@@ -24,17 +22,27 @@ A GPU-accelerated distributed signal processing pipeline built with CUDA, cuFFT,
 ## Project Structure
 
 ```
-SignalForge/                    <- main executable
-SignalForge_CPU/                <- static library (C++)
-SignalForge_GPU/                <- CUDA library
-SignalForge_Tests/              <- GoogleTest
-SignalForge_Tools/              <- Python signal generators
-SignalForge_Bench/              <- Python NCU/nsys profiling tools
+SignalForge/
+├── SignalForge/               # Entry point (main.cpp)
+├── SignalForge_CPU/           # Pipeline, gRPC receiver, Redis client
+├── SignalForge_GPU/           # CUDA kernels: SHA-256, cuFFT
+├── SignalForge_Tests/         # GoogleTest unit and integration tests
+├── SignalForge_ML/            # PyTorch LSTM autoencoder (anomaly detection)
+├── SignalForge_Tools/         # Python signal generator and gRPC client
+├── SignalForge_Bench/         # NCU/nsys benchmarking tools
+├── SignalForge_Proto/         # Protobuf definitions and generated stubs
+├── docs/                      # Diagrams and documentation assets
+├── config.json                # Runtime configuration
+├── CMakeLists.txt             # Linux/Docker build
+├── Dockerfile
+├── docker-compose.yml
 ```
 
 ---
 
 ## Build
+
+![Build Flow](assets//build_flow.svg)
 
 ### Windows (Visual Studio 2022)
 Open `SignalForge.sln` and build in Release x64.
@@ -196,7 +204,7 @@ git update-index --skip-worktree config.json
 
 Start Redis service only:
 ```bash
-docker-compose up redis -d
+docker compose up -d redis
 ```
 
 Stop all services:

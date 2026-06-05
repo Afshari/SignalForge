@@ -131,7 +131,7 @@ SignalForge.exe --config path/to/config
 # Linux / Docker — same flags, replace SignalForge.exe with ./SignalForge
 ```
 
-For detailed commands, cleanup, and troubleshooting → [DEVGUIDE.md](DEVGUIDE.md)
+For detailed commands, cleanup, and troubleshooting → [DEVGUIDE.md](docs/DEVGUIDE.md)
 
 ---
 

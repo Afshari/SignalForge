@@ -35,6 +35,11 @@ namespace SignalForge {
         else
             config.reader_threads = 1;
 
+        if (root.as_object().contains("verbose"))
+            config.verbose = root.at("verbose").as_bool();
+        else
+            config.verbose = false;
+
         config.test_data_dir  = root.at("paths").at("test_data_dir").as_string().c_str();
         config.output_dir     = root.at("paths").at("output_dir").as_string().c_str();
         config.input_dir      = root.at("paths").at("input_dir").as_string().c_str();
@@ -56,6 +61,7 @@ namespace SignalForge {
         config.fft_size                 = 65536;
 
         config.reader_threads = 1;
+        config.verbose = false;
 
         config.test_data_dir  = "test_data";
         config.output_dir     = "output";

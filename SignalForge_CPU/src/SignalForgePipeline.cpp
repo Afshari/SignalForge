@@ -97,6 +97,8 @@ namespace SignalForge {
 				if (!redisAvailable)
 					std::cerr << "[GPU] Redis not available - duplicate skipping disabled." << std::endl;
 
+				auto t_run_start = std::chrono::high_resolution_clock::now();
+
 				// Accumulator - survivors waiting for FFT
 				std::vector<std::vector<uint8_t>> accum_pcm;
 				size_t skipped = 0;
@@ -167,6 +169,14 @@ namespace SignalForge {
 				std::cout << "[GPU] Done. Skipped " << skipped
 					<< " duplicates, sent " << (total_processed - skipped)
 					<< " to FFT." << std::endl;
+
+				if (m_config.verbose)
+				{
+					auto t_run_end = std::chrono::high_resolution_clock::now();
+					double ms = std::chrono::duration<double, std::milli>(t_run_end - t_run_start).count();
+					std::cout << "[Pipeline] GPU time: " << std::fixed << std::setprecision(3)
+						<< ms / 1000.0 << "s" << std::endl;
+				}
 			});
 
 		// --- Thread 4: Redis writer ---

@@ -21,5 +21,6 @@
     },
     "pipeline": {
         "reader_threads": 4
-    }
+    },
+    "verbose": true
 }

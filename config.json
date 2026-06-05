@@ -18,5 +18,8 @@
             "threads_per_block": 256,
             "fft_size": 65536
         }
+    },
+    "pipeline": {
+        "reader_threads": 4
     }
 }

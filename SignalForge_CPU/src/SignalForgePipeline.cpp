@@ -45,39 +45,47 @@ namespace SignalForge {
 		// --- Thread 2: Reader ---
 		// Pops file paths, reads PCM data, accumulates up to sha256 batch size,
 		// then pushes a WavBatch into m_wav_queue.
-		std::jthread t_reader([this]()
-			{
-				WavBatch batch;
-				size_t total = 0;
-
-				while (auto path = m_path_queue.pop())
+		std::vector<std::jthread> t_readers;
+		for (uint32_t r = 0; r < m_config.reader_threads; r++)
+		{
+			t_readers.emplace_back([this]()
 				{
-					try
-					{
-						WavReader reader(*path);
-						batch.pcm_data.push_back(reader.ReadPCM());
-						total++;
+					WavBatch batch;
+					size_t total = 0;
 
-						if (batch.pcm_data.size() >= m_config.sha256.batch_size)
+					while (auto path = m_path_queue.pop())
+					{
+						try
 						{
-							m_wav_queue.push(std::move(batch));
-							batch = WavBatch{};
+							WavReader reader(*path);
+							batch.pcm_data.push_back(reader.ReadPCM());
+							total++;
+
+							if (batch.pcm_data.size() >= m_config.sha256.batch_size)
+							{
+								m_wav_queue.push(std::move(batch));
+								batch = WavBatch{};
+							}
+						}
+						catch (const std::exception& e)
+						{
+							std::cerr << "[Reader] Skipping " << *path
+								<< " - " << e.what() << std::endl;
 						}
 					}
-					catch (const std::exception& e)
+
+					// push remaining partial batch
+					if (!batch.pcm_data.empty())
+						m_wav_queue.push(std::move(batch));
+
+					// last reader closes the wav queue
+					if (++m_readers_done == static_cast<int>(m_config.reader_threads))
 					{
-						std::cerr << "[Reader] Skipping " << *path
-							<< " - " << e.what() << std::endl;
+						m_wav_queue.close();
+						std::cout << "[Reader] Done. All readers finished." << std::endl;
 					}
-				}
-
-				// Push any remaining files as a final partial batch
-				if (!batch.pcm_data.empty())
-					m_wav_queue.push(std::move(batch));
-
-				m_wav_queue.close();
-				std::cout << "[Reader] Done. Read " << total << " files." << std::endl;
-			});
+				});
+		}
 
 		// --- Thread 3: GPU worker ---
 		// Pops WavBatch, runs SHA-256, filters duplicates via Redis,

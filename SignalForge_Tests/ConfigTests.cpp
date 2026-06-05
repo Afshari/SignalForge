@@ -116,4 +116,54 @@ namespace SignalForge {
         EXPECT_EQ(loaded.input_dir, def.input_dir);
     }
 
+
+    // ================================================================================
+    // ConfigTests - ReaderThreads
+    // ================================================================================
+    TEST(ConfigTest, Config_DefaultReaderThreads)
+    {
+        auto config = SignalForge::Config::Default();
+        EXPECT_EQ(config.reader_threads, 1);
+    }
+
+    TEST(ConfigTest, Config_LoadReaderThreads)
+    {
+        // write a temp config with pipeline section
+        auto tmp = std::filesystem::temp_directory_path() / "test_config_readers.json";
+        std::ofstream f(tmp);
+        f << R"({
+        "file": { "max_file_size_kb": 2048, "sample_rate": 44100 },
+        "kernels": {
+            "sha256": { "batch_size": 5120, "threads_per_block": 128 },
+            "fft": { "batch_size": 1024, "threads_per_block": 256, "fft_size": 65536 }
+        },
+        "paths": { "test_data_dir": "test_data", "output_dir": "output", "input_dir": "input" },
+        "pipeline": { "reader_threads": 4 }
+    })";
+        f.close();
+
+        auto config = SignalForge::Config::Load(tmp);
+        EXPECT_EQ(config.reader_threads, 4);
+        std::filesystem::remove(tmp);
+    }
+
+    TEST(ConfigTest, Config_LoadMissingPipelineSection_DefaultsToOne)
+    {
+        auto tmp = std::filesystem::temp_directory_path() / "test_config_no_pipeline.json";
+        std::ofstream f(tmp);
+        f << R"({
+        "file": { "max_file_size_kb": 2048, "sample_rate": 44100 },
+        "kernels": {
+            "sha256": { "batch_size": 5120, "threads_per_block": 128 },
+            "fft": { "batch_size": 1024, "threads_per_block": 256, "fft_size": 65536 }
+        },
+        "paths": { "test_data_dir": "test_data", "output_dir": "output", "input_dir": "input" }
+    })";
+        f.close();
+
+        auto config = SignalForge::Config::Load(tmp);
+        EXPECT_EQ(config.reader_threads, 1);
+        std::filesystem::remove(tmp);
+    }
+
 } // namespace SignalForge

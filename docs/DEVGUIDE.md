@@ -209,6 +209,33 @@ Connect to Redis CLI:
 redis-cli -h redis
 ```
 
+### Inspect data
+
+List all hashes in production database:
+```bash
+redis-cli -h redis -n 0 KEYS "hash:*"
+```
+
+List all hashes in test database:
+```bash
+redis-cli -h redis -n 1 KEYS "hash:*"
+```
+
+Count keys in production database:
+```bash
+redis-cli -h redis -n 0 DBSIZE
+```
+
+Count keys in test database:
+```bash
+redis-cli -h redis -n 1 DBSIZE
+```
+
+List FFT magnitudes in production database:
+```bash
+redis-cli -h redis -n 0 KEYS "fft:*"
+```
+
 ### Redis databases
 - **db=0** -- production data (hashes and magnitudes)
 - **db=1** -- test data (used by integration tests, safe to flush)

@@ -25,5 +25,62 @@ services:
               count: 1
               capabilities: [gpu]
 
+  pipeline:
+    image: signalforge:latest
+    depends_on:
+      - redis
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    volumes:
+      - /home/ubuntu/signalforge_input:/app/x64/Release/input
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    entrypoint: ["/app/x64/Release/SignalForge", "--pipeline"]
+    profiles: ["run"]
+
+  tests:
+    image: signalforge:latest
+    depends_on:
+      - redis
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    entrypoint: ["/app/x64/Release/SignalForge_Tests"]
+    profiles: ["test"]
+
+  shell:
+    image: signalforge:latest
+    depends_on:
+      - redis
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    volumes:
+      - /home/ubuntu/signalforge_input:/app/x64/Release/input
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    entrypoint: ["/bin/bash"]
+    stdin_open: true
+    tty: true
+    profiles: ["shell"]
+
 volumes:
   redis_data:

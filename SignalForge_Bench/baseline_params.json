@@ -6,7 +6,7 @@
         "port": 6379,
         "db": 2
     },
-    "fft_size": 65536,
+    "fft_size": 8192,
     "worker_counts": [1, 2, 4, 8],
     "file_sizes_kb": [100, 500, 1024],
     "runs_per_config": 3

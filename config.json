@@ -24,7 +24,8 @@
     },
     "redis": {
         "host": "172.19.7.64",
-        "port": 6379
+        "port": 6379,
+        "db": 0
     },
     "verbose": true
 }

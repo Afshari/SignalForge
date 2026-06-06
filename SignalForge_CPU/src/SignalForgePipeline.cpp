@@ -92,7 +92,7 @@ namespace SignalForge {
 		// accumulates survivors up to fft batch size, runs FFT, pushes FFTResult.
 		std::jthread t_gpu([this]()
 			{
-				RedisClient redis;
+				RedisClient redis(m_config.redis.host, m_config.redis.port, m_config.redis.db);
 				bool redisAvailable = redis.Connect();
 				if (!redisAvailable)
 					std::cerr << "[GPU] Redis not available - duplicate skipping disabled." << std::endl;
@@ -210,7 +210,7 @@ namespace SignalForge {
 		// Pops FFTResult batches and stores magnitudes in Redis.
 		std::jthread t_writer([this]()
 			{
-				RedisClient redis;
+				RedisClient redis(m_config.redis.host, m_config.redis.port, m_config.redis.db);
 				bool redisAvailable = redis.Connect();
 				if (!redisAvailable)
 					std::cerr << "[Writer] Redis not available - results won't be stored." << std::endl;

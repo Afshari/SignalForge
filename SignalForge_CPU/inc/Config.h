@@ -15,6 +15,7 @@ namespace SignalForge {
     {
         std::string host;
         uint32_t    port;
+        uint32_t    db;
     };
 
     struct Config

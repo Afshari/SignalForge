@@ -3,6 +3,7 @@
 #include "Config.h"
 #include "Utils.h"
 #include "WavReader.h"
+#include "TestHelpers.h"
 #include "SignalForgePipeline.h"
 #include "cpu/SignalForge.h"
 #include <filesystem>
@@ -14,17 +15,18 @@ namespace SignalForge {
     class PipelineTest : public ::testing::Test
     {
     protected:
-        SignalForge::RedisClient client;
+        SignalForge::RedisClient client = TestHelpers::MakeClient();
         SignalForge::Config config;
 
         void SetUp() override
         {
             ASSERT_TRUE(client.Connect());
             client.FlushAll();
-            config = SignalForge::Config::Default();
+            config = SignalForge::Config::Load(std::filesystem::current_path() / "config.json");
             config.test_data_dir = std::filesystem::current_path() / "test_data";
             config.input_dir = std::filesystem::current_path() / "test_data";
             config.output_dir = std::filesystem::current_path() / "output";
+            config.redis.db = 1;
         }
 
         void TearDown() override

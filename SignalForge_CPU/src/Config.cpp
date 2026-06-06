@@ -42,6 +42,7 @@ namespace SignalForge {
 
         config.redis.host = root.at("redis").at("host").as_string().c_str();
         config.redis.port = root.at("redis").at("port").as_int64();
+        config.redis.db = root.at("redis").at("db").as_int64();
 
         config.test_data_dir  = root.at("paths").at("test_data_dir").as_string().c_str();
         config.output_dir     = root.at("paths").at("output_dir").as_string().c_str();
@@ -68,6 +69,7 @@ namespace SignalForge {
 
         config.redis.host = "127.0.0.1";
         config.redis.port = 6379;
+        config.redis.db = 0;
 
         config.test_data_dir  = "test_data";
         config.output_dir     = "output";

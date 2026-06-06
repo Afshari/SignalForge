@@ -79,20 +79,17 @@ docker compose build --no-cache
 
 ## Run
 
-### Interactive Mode
+### Interactive mode
 ```bash
 # Start Redis first
 docker compose up -d redis
 
 # Enter container interactively
-docker compose run --rm --entrypoint /bin/bash signalforge
+docker compose --profile shell run shell
 ```
+
 ### Generate test signals
-
 ```bash
-docker compose up -d redis
-docker compose run --rm --entrypoint /bin/bash signalforge
-
 # Inside container
 cd /app/SignalForge_Tools
 python3 generate_signals.py --params ../SignalForge_Bench/profiling_params.json
@@ -100,39 +97,27 @@ python3 generate_signals.py --params ../SignalForge_Bench/profiling_params.json
 
 ### Pipeline mode (multithreaded: SHA-256 + FFT + Redis)
 ```bash
-docker compose run --rm --entrypoint /bin/bash signalforge -c \
-    "/app/x64/Release/SignalForge --pipeline"
-```
-
-With input files from host machine:
-```bash
-docker compose run --rm \
-    -v /home/ubuntu/signalforge_input:/app/x64/Release/input \
-    --entrypoint /bin/bash signalforge -c \
-    "/app/x64/Release/SignalForge --pipeline"
+docker compose --profile run up
 ```
 
 ### Hash mode (SHA-256 only, sequential)
 ```bash
-docker compose run --rm --entrypoint /bin/bash signalforge -c \
-    "/app/x64/Release/SignalForge"
+docker compose --profile shell run shell -c "/app/x64/Release/SignalForge"
 ```
 
 ### FFT mode (cuFFT only, sequential)
 ```bash
-docker compose run --rm --entrypoint /bin/bash signalforge -c \
-    "/app/x64/Release/SignalForge --fft"
+docker compose --profile shell run shell -c "/app/x64/Release/SignalForge --fft"
 ```
 
 ### Profile mode (SHA-256 with timing)
 ```bash
-docker compose run --rm --entrypoint /bin/bash signalforge -c \
-    "/app/x64/Release/SignalForge --profile"
+docker compose --profile shell run shell -c "/app/x64/Release/SignalForge --profile"
 ```
+
 ### gRPC mode
 ```bash
-docker compose run --rm --entrypoint /bin/bash signalforge -c \
-    "/app/x64/Release/SignalForge --grpc"
+docker compose --profile shell run shell -c "/app/x64/Release/SignalForge --grpc"
 ```
 
 ---
@@ -141,13 +126,12 @@ docker compose run --rm --entrypoint /bin/bash signalforge -c \
 
 Run all tests:
 ```bash
-docker compose run --rm --entrypoint /bin/bash signalforge -c \
-    "cd /app/x64/Release && ./SignalForge_Tests"
+docker compose --profile test up
 ```
 
 ### Test categories
 - **Unit tests** -- no external dependencies, always run
-- **Integration tests** -- require Redis (RedisClientTests, PipelineTests)
+- **Integration tests** -- require Redis (RedisClientTests, PipelineTests, GrpcTests)
 
 Redis is started automatically via Docker Compose when running tests.
 
@@ -254,7 +238,7 @@ save 60 10000
 
 Run NCU sweep (requires privileged container):
 ```bash
-docker compose run --rm --entrypoint /bin/bash --privileged signalforge -c \
+docker compose --profile shell run --privileged shell -c \
     "cd /app/SignalForge_Bench && python3 run_ncu.py"
 ```
 
@@ -271,11 +255,9 @@ docker compose run --rm --entrypoint /bin/bash --privileged signalforge -c \
 Run the Python multiprocessing baseline to compare against SignalForge C++/CUDA:
 
 ```bash
-# Start Redis first
+# Start Redis and enter container
 docker compose up -d redis
-
-# Enter container
-docker compose run --rm --entrypoint /bin/bash signalforge
+docker compose --profile shell run shell
 
 # Inside container
 cd /app/SignalForge_Bench
@@ -345,8 +327,7 @@ git pull origin main
 Build and run on AWS:
 ```bash
 docker compose build
-docker compose run --rm --entrypoint /bin/bash signalforge -c \
-    "/app/x64/Release/SignalForge --pipeline"
+docker compose --profile run up
 ```
 
 ---

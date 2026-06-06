@@ -22,6 +22,9 @@ namespace SignalForge {
         KernelConfig            fft;
         uint32_t                fft_size;
 
+        uint32_t                reader_threads;
+        bool                    verbose;
+
         // Paths
         std::filesystem::path   test_data_dir;
         std::filesystem::path   output_dir;

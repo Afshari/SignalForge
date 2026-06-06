@@ -2,11 +2,25 @@
 
 A GPU-accelerated distributed signal processing pipeline built with CUDA, cuFFT, Redis, and C++20.
 
+## Contents
+
+- [Pipeline Stages](#pipeline-stages)
+- [Signal Types](#signal-types)
+- [Project Structure](#project-structure)
+- [Build](#build)
+- [Run](#run)
+- [Tests](#tests)
+- [Redis](#redis)
+- [NCU Profiling](#ncu-profiling)
+- [Python Baseline Benchmark](#python-baseline-benchmark)
+- [Git](#git)
+- [Docker Compose](#docker-compose)
+- [AWS](#aws-g4dnxlarge-tesla-t4)
+- [Environment Variables](#environment-variables)
+
 ## Architecture
 
-```
-[Scanner / gRPC] -> m_path_queue -> [Reader threads] -> m_wav_queue -> [GPU worker: SHA-256 + FFT] -> m_result_queue -> [Redis writer]
-```
+![Pipeline Architecture](assets/pipeline.svg)
 
 ### Pipeline stages
 - **Scanner** -- reads file paths from local directory (gRPC will add remote files later)
@@ -24,17 +38,27 @@ A GPU-accelerated distributed signal processing pipeline built with CUDA, cuFFT,
 ## Project Structure
 
 ```
-SignalForge/                    <- main executable
-SignalForge_CPU/                <- static library (C++)
-SignalForge_GPU/                <- CUDA library
-SignalForge_Tests/              <- GoogleTest
-SignalForge_Tools/              <- Python signal generators
-SignalForge_Bench/              <- Python NCU/nsys profiling tools
+SignalForge/
+├── SignalForge/               # Entry point (main.cpp)
+├── SignalForge_CPU/           # Pipeline, gRPC receiver, Redis client
+├── SignalForge_GPU/           # CUDA kernels: SHA-256, cuFFT
+├── SignalForge_Tests/         # GoogleTest unit and integration tests
+├── SignalForge_ML/            # PyTorch LSTM autoencoder (anomaly detection)
+├── SignalForge_Tools/         # Python signal generator and gRPC client
+├── SignalForge_Bench/         # NCU/nsys benchmarking tools
+├── SignalForge_Proto/         # Protobuf definitions and generated stubs
+├── docs/                      # Diagrams and documentation assets
+├── config.json                # Runtime configuration
+├── CMakeLists.txt             # Linux/Docker build
+├── Dockerfile
+├── docker-compose.yml
 ```
 
 ---
 
 ## Build
+
+![Build Flow](assets//build_flow.svg)
 
 ### Windows (Visual Studio 2022)
 Open `SignalForge.sln` and build in Release x64.
@@ -43,27 +67,46 @@ Open `SignalForge.sln` and build in Release x64.
 
 Build the Docker image:
 ```bash
-docker-compose build
+docker compose build
 ```
 
 Rebuild after code changes:
 ```bash
-docker-compose build --no-cache
+docker compose build --no-cache
 ```
 
 ---
 
 ## Run
 
+### Interactive Mode
+```bash
+# Start Redis first
+docker compose up -d redis
+
+# Enter container interactively
+docker compose run --rm --entrypoint /bin/bash signalforge
+```
+### Generate test signals
+
+```bash
+docker compose up -d redis
+docker compose run --rm --entrypoint /bin/bash signalforge
+
+# Inside container
+cd /app/SignalForge_Tools
+python3 generate_signals.py --params ../SignalForge_Bench/profiling_params.json
+```
+
 ### Pipeline mode (multithreaded: SHA-256 + FFT + Redis)
 ```bash
-docker-compose run --rm --entrypoint /bin/bash signalforge -c \
+docker compose run --rm --entrypoint /bin/bash signalforge -c \
     "/app/x64/Release/SignalForge --pipeline"
 ```
 
 With input files from host machine:
 ```bash
-docker-compose run --rm \
+docker compose run --rm \
     -v /home/ubuntu/signalforge_input:/app/x64/Release/input \
     --entrypoint /bin/bash signalforge -c \
     "/app/x64/Release/SignalForge --pipeline"
@@ -71,20 +114,25 @@ docker-compose run --rm \
 
 ### Hash mode (SHA-256 only, sequential)
 ```bash
-docker-compose run --rm --entrypoint /bin/bash signalforge -c \
+docker compose run --rm --entrypoint /bin/bash signalforge -c \
     "/app/x64/Release/SignalForge"
 ```
 
 ### FFT mode (cuFFT only, sequential)
 ```bash
-docker-compose run --rm --entrypoint /bin/bash signalforge -c \
+docker compose run --rm --entrypoint /bin/bash signalforge -c \
     "/app/x64/Release/SignalForge --fft"
 ```
 
 ### Profile mode (SHA-256 with timing)
 ```bash
-docker-compose run --rm --entrypoint /bin/bash signalforge -c \
+docker compose run --rm --entrypoint /bin/bash signalforge -c \
     "/app/x64/Release/SignalForge --profile"
+```
+### gRPC mode
+```bash
+docker compose run --rm --entrypoint /bin/bash signalforge -c \
+    "/app/x64/Release/SignalForge --grpc"
 ```
 
 ---
@@ -93,7 +141,7 @@ docker-compose run --rm --entrypoint /bin/bash signalforge -c \
 
 Run all tests:
 ```bash
-docker-compose run --rm --entrypoint /bin/bash signalforge -c \
+docker compose run --rm --entrypoint /bin/bash signalforge -c \
     "cd /app/x64/Release && ./SignalForge_Tests"
 ```
 
@@ -144,6 +192,23 @@ Connect to test database:
 redis-cli -n 1
 ```
 
+### Docker
+
+Flush production database:
+```bash
+redis-cli -h redis flushdb
+```
+
+Flush test database (db=1):
+```bash
+redis-cli -h redis -n 1 flushdb
+```
+
+Connect to Redis CLI:
+```bash
+redis-cli -h redis
+```
+
 ### Redis databases
 - **db=0** -- production data (hashes and magnitudes)
 - **db=1** -- test data (used by integration tests, safe to flush)
@@ -162,7 +227,7 @@ save 60 10000
 
 Run NCU sweep (requires privileged container):
 ```bash
-docker-compose run --rm --entrypoint /bin/bash --privileged signalforge -c \
+docker compose run --rm --entrypoint /bin/bash --privileged signalforge -c \
     "cd /app/SignalForge_Bench && python3 run_ncu.py"
 ```
 
@@ -171,6 +236,27 @@ docker-compose run --rm --entrypoint /bin/bash --privileged signalforge -c \
 |----------|---------|------------------------------------|----------------|
 | SHA-256  | Compute | batch=5120, threads_per_block=128  | ~574 files/sec |
 | cuFFT    | Memory  | batch=1024, threads_per_block=256  | memory-bound   |
+
+---
+
+## Python Baseline Benchmark
+
+Run the Python multiprocessing baseline to compare against SignalForge C++/CUDA:
+
+```bash
+# Start Redis first
+docker compose up -d redis
+
+# Enter container
+docker compose run --rm --entrypoint /bin/bash signalforge
+
+# Inside container
+cd /app/SignalForge_Bench
+python3 run_baseline.py
+```
+
+Results saved to `SignalForge_Bench/results/baseline_<timestamp>.csv`.
+Configure worker count and file sizes in `baseline_params.json`.
 
 ---
 
@@ -196,12 +282,12 @@ git update-index --skip-worktree config.json
 
 Start Redis service only:
 ```bash
-docker-compose up redis -d
+docker compose up -d redis
 ```
 
 Stop all services:
 ```bash
-docker-compose down
+docker compose down
 ```
 
 Clean up containers, networks, dangling images:
@@ -225,14 +311,14 @@ ssh ubuntu@<aws-ip>
 
 Pull latest code:
 ```bash
-cd ~/signalforge
-git pull aws-git-srv main
+cd ~/SignalForge
+git pull origin main
 ```
 
 Build and run on AWS:
 ```bash
-docker-compose build
-docker-compose run --rm --entrypoint /bin/bash signalforge -c \
+docker compose build
+docker compose run --rm --entrypoint /bin/bash signalforge -c \
     "/app/x64/Release/SignalForge --pipeline"
 ```
 

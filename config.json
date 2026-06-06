@@ -10,13 +10,17 @@
     },
     "kernels": {
         "sha256": {
-            "batch_size": 5120,
+            "batch_size": 512,
             "threads_per_block": 128
         },
         "fft": {
-            "batch_size": 1024,
+            "batch_size": 4096,
             "threads_per_block": 256,
-            "fft_size": 65536
+            "fft_size": 8192
         }
-    }
+    },
+    "pipeline": {
+        "reader_threads": 4
+    },
+    "verbose": true
 }

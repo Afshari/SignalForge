@@ -30,6 +30,7 @@ namespace SignalForge {
     private:
         std::vector<std::string>     m_filepaths;
         Config                       m_config;
+        std::atomic<int>             m_readers_done{ 0 };
 
         // Stage 0->1: file paths
         // gRPC will push into this queue later as a second producer

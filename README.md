@@ -15,7 +15,7 @@ In a distributed system ingesting signal recordings from multiple sources, two r
 
 ## Pipeline Architecture
 
-![Pipeline Architecture](docs/pipeline.svg)
+![Pipeline Architecture](docs/assets/pipeline.svg)
 
 **Stage 1 — Ingestion (two producers in parallel):**
 - Scanner thread reads existing WAV files from `input_dir`
@@ -73,7 +73,6 @@ SignalForge/
 ├── CMakeLists.txt             # Linux/Docker build
 ├── Dockerfile
 ├── docker-compose.yml
-└── DEVGUIDE.md                # Developer operations guide
 ```
 
 ---
@@ -95,7 +94,7 @@ SignalForge/
 
 ## Build & Run
 
-![Build Flow](docs/build_flow.svg)
+![Build Flow](docs/assets//build_flow.svg)
 
 ### Windows (Visual Studio)
 
@@ -132,7 +131,7 @@ SignalForge.exe --config path/to/config
 # Linux / Docker — same flags, replace SignalForge.exe with ./SignalForge
 ```
 
-For detailed commands, cleanup, and troubleshooting → [DEVGUIDE.md](DEVGUIDE.md)
+For detailed commands, cleanup, and troubleshooting → [DEVGUIDE.md](docs/DEVGUIDE.md)
 
 ---
 

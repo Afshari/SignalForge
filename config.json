@@ -22,5 +22,9 @@
     "pipeline": {
         "reader_threads": 4
     },
+    "redis": {
+        "host": "172.19.7.64",
+        "port": 6379
+    },
     "verbose": true
 }

@@ -3,6 +3,13 @@
 #include <stdexcept>
 #include <cstring>
 
+#ifndef _WIN32
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
+#endif
+
 namespace SignalForge {
 
     // --------------------------------------------------------------------------------
@@ -132,6 +139,33 @@ namespace SignalForge {
     // --------------------------------------------------------------------------------
     std::vector<uint8_t> WavReader::ReadPCM() const
     {
+#ifndef _WIN32
+        int fd = open(m_filePath.c_str(), O_RDONLY);
+        if (fd == -1)
+            throw std::runtime_error(
+                "WavReader: failed to open file for reading: " + m_filePath.string());
+
+        posix_fadvise(fd, m_dataOffset, m_dataSize, POSIX_FADV_SEQUENTIAL);
+
+        struct stat sb;
+        fstat(fd, &sb);
+
+        void* mapped = mmap(nullptr, sb.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
+        if (mapped == MAP_FAILED)
+        {
+            close(fd);
+            throw std::runtime_error(
+                "WavReader: mmap failed: " + m_filePath.string());
+        }
+
+        std::vector<uint8_t> pcm(m_dataSize);
+        std::memcpy(pcm.data(),
+            static_cast<uint8_t*>(mapped) + m_dataOffset,
+            m_dataSize);
+
+        munmap(mapped, sb.st_size);
+        close(fd);
+#else
         std::ifstream file(m_filePath, std::ios::binary);
         if (!file.is_open())
             throw std::runtime_error(
@@ -145,7 +179,7 @@ namespace SignalForge {
         if (!file)
             throw std::runtime_error(
                 "WavReader: failed to read PCM data: " + m_filePath.string());
-
+#endif
         return pcm;
     }
 

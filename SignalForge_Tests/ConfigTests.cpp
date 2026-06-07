@@ -21,7 +21,7 @@ namespace SignalForge {
 	static const std::string k_minimal_config = R"({
 		"file": { "max_file_size_kb": 2048, "sample_rate": 44100 },
 		"kernels": {
-			"sha256": { "batch_size": 5120, "threads_per_block": 128 },
+			"sha256": { "batch_size": 512, "threads_per_block": 128 },
 			"fft": { "batch_size": 1024, "threads_per_block": 256, "fft_size": 65536 }
 		},
 		"paths": { "test_data_dir": "test_data", "output_dir": "output", "input_dir": "input" },

@@ -10,8 +10,8 @@
     },
     "kernels": {
         "sha256": {
-            "batch_size": 512,
-            "threads_per_block": 128
+            "batch_size": 1024,
+            "threads_per_block": 64
         },
         "fft": {
             "batch_size": 4096,

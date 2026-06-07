@@ -263,51 +263,90 @@ void SHA256HashWrapper_CPU(uint8_t* h_input, uint64_t input_size, uint64_t* h_ha
 
 // --------------------------------------------------------------------------------
 // SHA256BatchWrapper_CPU - batch of files
-// Groups files by size, uses streamed kernel per group
 // --------------------------------------------------------------------------------
 void SHA256BatchWrapper_CPU(
     std::vector<std::vector<uint8_t>>& h_inputs,
-    uint64_t*                          h_hashes,
+    uint64_t* h_hashes,
     uint32_t                           num_files,
     uint32_t                           threads_per_block)
 {
-    // Group file indices by size
-    std::map<uint64_t, std::vector<uint32_t>> sizeGroups;
+    if (num_files == 0) return;
+
+    uint64_t fileSize = h_inputs[0].size();
+
+    // Allocate pinned host buffer and device buffers
+    BYTE* pinned_in = nullptr;
+    BYTE* pinned_out = nullptr;
+    BYTE* d_in = nullptr;
+    BYTE* d_out = nullptr;
+
+    size_t total_in = fileSize * num_files;
+    size_t total_out = SHA256_BLOCK_SIZE * num_files;
+
+    cudaMallocHost(&pinned_in, total_in);
+    cudaMallocHost(&pinned_out, total_out);
+    cudaMalloc(&d_in, total_in);
+    cudaMalloc(&d_out, total_out);
+
+    // Copy each file directly into pinned buffer — no intermediate flat vector
     for (uint32_t i = 0; i < num_files; i++)
-        sizeGroups[h_inputs[i].size()].push_back(i);
+        std::memcpy(pinned_in + i * fileSize, h_inputs[i].data(), fileSize);
 
-    for (auto& group : sizeGroups)
+    // Create streams
+    cudaStream_t streams[NUM_STREAMS];
+    for (int s = 0; s < NUM_STREAMS; s++)
+        cudaStreamCreate(&streams[s]);
+
+    // Split across streams
+    uint32_t chunk = (num_files + NUM_STREAMS - 1) / NUM_STREAMS;
+
+    for (int s = 0; s < NUM_STREAMS; s++)
     {
-        uint64_t fileSize = group.first;
-        std::vector<uint32_t>& indices = group.second;
-        uint32_t groupCount = static_cast<uint32_t>(indices.size());
+        uint32_t offset = s * chunk;
+        if (offset >= num_files) break;
 
-        // Build flat input buffer
-        std::vector<BYTE> flatInput(fileSize * groupCount);
-        for (uint32_t g = 0; g < groupCount; g++)
-            std::memcpy(
-                flatInput.data() + g * fileSize,
-                h_inputs[indices[g]].data(),
-                fileSize);
+        uint32_t count = std::min(chunk, num_files - offset);
 
-        std::vector<BYTE> flatOutput(32 * groupCount, 0);
+        size_t in_offset = (size_t)offset * fileSize;
+        size_t out_offset = (size_t)offset * SHA256_BLOCK_SIZE;
 
-        mcm_cuda_sha256_hash_batch_streamed(
-            flatInput.data(),
+        cudaMemcpyAsync(
+            d_in + in_offset,
+            pinned_in + in_offset,
+            (size_t)count * fileSize,
+            cudaMemcpyHostToDevice,
+            streams[s]);
+
+        uint32_t blocks = (count + threads_per_block - 1) / threads_per_block;
+        kernel_sha256_hash << <blocks, threads_per_block, 0, streams[s] >> > (
+            d_in + in_offset,
             static_cast<WORD>(fileSize),
-            flatOutput.data(),
-            groupCount,
-            threads_per_block);
+            d_out + out_offset,
+            count);
 
-        // Reassemble results
-        for (uint32_t g = 0; g < groupCount; g++)
-        {
-            uint32_t originalIdx = indices[g];
-            ByteHashToUint64(
-                flatOutput.data() + g * 32,
-                h_hashes + originalIdx * 4);
-        }
+        cudaMemcpyAsync(
+            pinned_out + out_offset,
+            d_out + out_offset,
+            (size_t)count * SHA256_BLOCK_SIZE,
+            cudaMemcpyDeviceToHost,
+            streams[s]);
     }
+
+    for (int s = 0; s < NUM_STREAMS; s++)
+        cudaStreamSynchronize(streams[s]);
+
+    // Convert output
+    for (uint32_t i = 0; i < num_files; i++)
+        ByteHashToUint64(pinned_out + i * SHA256_BLOCK_SIZE, h_hashes + i * 4);
+
+    // Cleanup
+    for (int s = 0; s < NUM_STREAMS; s++)
+        cudaStreamDestroy(streams[s]);
+
+    cudaFreeHost(pinned_in);
+    cudaFreeHost(pinned_out);
+    cudaFree(d_in);
+    cudaFree(d_out);
 }
 
 // --------------------------------------------------------------------------------

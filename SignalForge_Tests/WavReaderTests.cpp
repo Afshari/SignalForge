@@ -203,7 +203,7 @@ namespace SignalForge {
     // ================================================================================
     TEST(WavReaderTests, ReadGeneratedFile_Clean_500kb)
     {
-        auto path = TestHelpers::TestDataPath("engine_clean_500kb_001.wav");
+        auto path = TestHelpers::TestDataPath("engine_clean_500kb_00001.wav", "500kb");
 
         SignalForge::WavReader reader(path);
 
@@ -220,7 +220,7 @@ namespace SignalForge {
 
     TEST(WavReaderTests, ReadGeneratedFile_Noisy_1024kb)
     {
-        auto path = TestHelpers::TestDataPath("engine_noisy_1024kb_001.wav");
+        auto path = TestHelpers::TestDataPath("engine_noisy_1024kb_00001.wav", "1024kb");
 
         SignalForge::WavReader reader(path);
 

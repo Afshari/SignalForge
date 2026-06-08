@@ -11,6 +11,13 @@ namespace SignalForge {
         uint32_t threads_per_block;
     };
 
+    struct RedisConfig
+    {
+        std::string host;
+        uint32_t    port;
+        uint32_t    db;
+    };
+
     struct Config
     {
         // File settings
@@ -24,6 +31,7 @@ namespace SignalForge {
 
         uint32_t                reader_threads;
         bool                    verbose;
+        RedisConfig             redis;
 
         // Paths
         std::filesystem::path   test_data_dir;

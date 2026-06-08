@@ -4,6 +4,25 @@ A GPU-accelerated distributed pipeline for ingesting, deduplicating, and analyzi
 
 ---
 
+## Table of Contents
+- [SignalForge](#signalforge)
+  - [Table of Contents](#table-of-contents)
+  - [The Problem](#the-problem)
+  - [Pipeline Architecture](#pipeline-architecture)
+  - [Current Limitations](#current-limitations)
+  - [Results](#results)
+  - [Benchmark](#benchmark)
+  - [Project Structure](#project-structure)
+  - [Requirements](#requirements)
+  - [| OS              | Windows 10/11, Ubuntu 22.04, Docker               |](#-os---------------windows-1011-ubuntu-2204-docker---------------)
+  - [Build \& Run](#build--run)
+    - [Windows (Visual Studio)](#windows-visual-studio)
+    - [Linux / Docker](#linux--docker)
+    - [Run](#run)
+  - [Configuration (`config.json`)](#configuration-configjson)
+  - [Tests](#tests)
+  - [Credits](#credits)
+
 ## The Problem
 
 In a distributed system ingesting signal recordings from multiple sources, two recordings of the same engine under the same conditions will produce different raw bytes due to environmental noise. Traditional content hashing (SHA-256) would treat them as different files and process both. SignalForge solves this with a two-stage approach:
@@ -37,6 +56,16 @@ In a distributed system ingesting signal recordings from multiple sources, two r
 - LSTM autoencoder reads FFT magnitudes from Redis
 - Flags signals that deviate from the learned normal pattern as anomalies
 
+## Current Limitations
+
+**Scenario 1 (current implementation):** The pipeline requires all input files
+in a batch to be the same size. Mixed file sizes are not yet supported.
+
+Planned — **Scenario 2:** Input files will be organized into subdirectories
+by size (`input/100kb/`, `input/500kb/`, etc.), allowing the pipeline to
+process each size group as a uniform batch. gRPC receiver will route
+incoming files to the correct subdirectory automatically.
+
 ---
 
 ## Results
@@ -52,7 +81,23 @@ LSTM autoencoder trained on 200 clean engine signals, tested on 30 anomaly signa
 
 Full ML details → [SignalForge_ML/README.md](SignalForge_ML/README.md)
 
-> Throughput benchmarks (nsys pipeline profiling) coming in a future update.
+## Benchmark
+
+Tested on AWS EC2 g4dn.xlarge (Tesla T4, 16GB GPU, Ubuntu 22.04), Docker container, CUDA 12.0.
+
+| File size | Files | SHA-256 | FFT    | Redis  | Total  | Throughput     |
+|-----------|-------|---------|--------|--------|--------|----------------|
+| 100 KB    | 10,004 | 3.0s   | 0.26s  | 0.87s  | 4.6s   | ~2,175 files/s |
+| 500 KB    | 10,010 | 8.2s   | 0.27s  | 0.86s  | 11.1s  | ~902 files/s   |
+
+Config: `sha256.batch_size=1024`, `threads_per_block=64`, `reader_threads=4`
+
+**vs Python baseline (same hardware):**
+
+| File size | C++ pipeline | Python (best) | Speedup |
+|-----------|-------------|---------------|---------|
+| 100 KB    | 4.6s        | 21.9s         | 4.7x    |
+| 500 KB    | 11.1s       | 23.6s         | 2.1x    |
 
 ---
 
@@ -144,7 +189,7 @@ For detailed commands, cleanup, and troubleshooting → [DEVGUIDE.md](docs/DEVGU
         "sample_rate": 44100
     },
     "kernels": {
-        "sha256": { "batch_size": 5120, "threads_per_block": 128 },
+        "sha256": { "batch_size": 1024, "threads_per_block": 64 },
         "fft":    { "batch_size": 1024, "threads_per_block": 256, "fft_size": 65536 }
     },
     "paths": {
@@ -172,4 +217,8 @@ x64\Release\SignalForge_Tests.exe
 ## Credits
 [cuFFT](https://developer.nvidia.com/cufft) by NVIDIA Corporation. Used for GPU-accelerated Fast Fourier Transform batch processing.
 
-SHA-256 GPU implementation based on code from [VanitySearch](https://github.com/JeanLucPons/VanitySearch) by Jean-Luc Pons, licensed under GPL-3.0.
+The CUDA SHA-256 implementation in `SignalForge_GPU/src/gpu/SignalForge.cu` is based on [cuda-hashing-algos](https://github.com/mochimodev/cuda-hashing-algos) by mochimodev, released into the Public Domain (June 2019).
+
+Original implementation by Brad Conte: [crypto-algorithms](https://github.com/B-Con/crypto-algorithms), Public Domain.
+
+The `cuda_sha256_init`, `cuda_sha256_update`, `cuda_sha256_final`, `cuda_sha256_transform`, and `kernel_sha256_hash` functions were copied directly into `SignalForge.cu` and wrapped with `SHA256HashWrapper_CPU` and `SHA256BatchWrapper_CPU` to fit SignalForge's batch processing pipeline.

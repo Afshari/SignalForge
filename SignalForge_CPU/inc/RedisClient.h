@@ -10,7 +10,7 @@ namespace SignalForge {
     class RedisClient
     {
     public:
-        RedisClient(const std::string& host = "127.0.0.1", int port = 6379, int db = 0);
+        RedisClient(const std::string& host, int port, int db);
         ~RedisClient();
 
         // Connection

@@ -35,5 +35,11 @@
     <ClInclude Include="inc\cpu\SignalForge.h">
       <Filter>inc\cpu</Filter>
     </ClInclude>
+    <ClInclude Include="inc\gpu\sha256.cuh">
+      <Filter>inc\gpu</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\cpu\sha256config.h">
+      <Filter>inc\cpu</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

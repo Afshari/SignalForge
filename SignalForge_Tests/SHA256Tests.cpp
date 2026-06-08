@@ -89,7 +89,7 @@ namespace SignalForge {
     TEST(SHA256Tests, CleanSignal_500kb_KnownHash)
     {
         uint64_t h_hash[4] = { 0, 0, 0, 0 };
-        TestHelpers::HashWavFile(TestHelpers::TestDataPath("engine_clean_500kb_001.wav"), h_hash);
+        TestHelpers::HashWavFile(TestHelpers::TestDataPath("engine_clean_500kb_00001.wav", "500kb"), h_hash);
         EXPECT_EQ(h_hash[0], 0x9F0148E8D4556E5CULL);
         EXPECT_EQ(h_hash[1], 0xD1FED78881D28D86ULL);
         EXPECT_EQ(h_hash[2], 0x160AE9606B57129AULL);
@@ -100,8 +100,8 @@ namespace SignalForge {
     {
         uint64_t h_hash_a[4] = { 0, 0, 0, 0 };
         uint64_t h_hash_b[4] = { 0, 0, 0, 0 };
-        TestHelpers::HashWavFile(TestHelpers::TestDataPath("engine_clean_500kb_001.wav"), h_hash_a);
-        TestHelpers::HashWavFile(TestHelpers::TestDataPath("engine_clean_500kb_002.wav"), h_hash_b);
+        TestHelpers::HashWavFile(TestHelpers::TestDataPath("engine_clean_500kb_00001.wav", "500kb"), h_hash_a);
+        TestHelpers::HashWavFile(TestHelpers::TestDataPath("engine_clean_500kb_00002.wav", "500kb"), h_hash_b);
         EXPECT_EQ(h_hash_a[0], h_hash_b[0]);
         EXPECT_EQ(h_hash_a[1], h_hash_b[1]);
         EXPECT_EQ(h_hash_a[2], h_hash_b[2]);
@@ -111,7 +111,7 @@ namespace SignalForge {
     TEST(SHA256Tests, CleanSignal_1024kb_KnownHash)
     {
         uint64_t h_hash[4] = { 0, 0, 0, 0 };
-        TestHelpers::HashWavFile(TestHelpers::TestDataPath("engine_clean_1024kb_001.wav"), h_hash);
+        TestHelpers::HashWavFile(TestHelpers::TestDataPath("engine_clean_1024kb_00001.wav", "1024kb"), h_hash);
         EXPECT_EQ(h_hash[0], 0xA1B34DADE37A9E14ULL);
         EXPECT_EQ(h_hash[1], 0x622BC08DA1FF5330ULL);
         EXPECT_EQ(h_hash[2], 0xA994EF470F66C8A6ULL);
@@ -122,8 +122,8 @@ namespace SignalForge {
     {
         uint64_t h_hash_a[4] = { 0, 0, 0, 0 };
         uint64_t h_hash_b[4] = { 0, 0, 0, 0 };
-        TestHelpers::HashWavFile(TestHelpers::TestDataPath("engine_clean_1024kb_001.wav"), h_hash_a);
-        TestHelpers::HashWavFile(TestHelpers::TestDataPath("engine_clean_1024kb_002.wav"), h_hash_b);
+        TestHelpers::HashWavFile(TestHelpers::TestDataPath("engine_clean_1024kb_00001.wav", "1024kb"), h_hash_a);
+        TestHelpers::HashWavFile(TestHelpers::TestDataPath("engine_clean_1024kb_00002.wav", "1024kb"), h_hash_b);
         EXPECT_EQ(h_hash_a[0], h_hash_b[0]);
         EXPECT_EQ(h_hash_a[1], h_hash_b[1]);
         EXPECT_EQ(h_hash_a[2], h_hash_b[2]);
@@ -134,19 +134,19 @@ namespace SignalForge {
     TEST(SHA256Tests, NoisySignal_500kb_KnownHash)
     {
         uint64_t h_hash[4] = { 0, 0, 0, 0 };
-        TestHelpers::HashWavFile(TestHelpers::TestDataPath("engine_noisy_500kb_001.wav"), h_hash);
-        EXPECT_EQ(h_hash[0], 0xF9AF5D1AF380BA6CULL);
-        EXPECT_EQ(h_hash[1], 0xC445A008A1DE8227ULL);
-        EXPECT_EQ(h_hash[2], 0x4D127D8252486B6AULL);
-        EXPECT_EQ(h_hash[3], 0xB6AA06CC513272E2ULL);
+        TestHelpers::HashWavFile(TestHelpers::TestDataPath("engine_noisy_500kb_00001.wav", "500kb"), h_hash);
+        EXPECT_EQ(h_hash[0], 0x13917B9BF9CCF535ULL);
+        EXPECT_EQ(h_hash[1], 0xC2DCB4E072507C34ULL);
+        EXPECT_EQ(h_hash[2], 0xBE6C528D6629AE18ULL);
+        EXPECT_EQ(h_hash[3], 0xF678991B9CCFE495ULL);
     }
 
     TEST(SHA256Tests, NoisySignal_500kb_FilesAreDifferent)
     {
         uint64_t h_hash_a[4] = { 0, 0, 0, 0 };
         uint64_t h_hash_b[4] = { 0, 0, 0, 0 };
-        TestHelpers::HashWavFile(TestHelpers::TestDataPath("engine_noisy_500kb_001.wav"), h_hash_a);
-        TestHelpers::HashWavFile(TestHelpers::TestDataPath("engine_noisy_500kb_002.wav"), h_hash_b);
+        TestHelpers::HashWavFile(TestHelpers::TestDataPath("engine_noisy_500kb_00001.wav", "500kb"), h_hash_a);
+        TestHelpers::HashWavFile(TestHelpers::TestDataPath("engine_noisy_500kb_00002.wav", "500kb"), h_hash_b);
 
         bool different =
             h_hash_a[0] != h_hash_b[0] || h_hash_a[1] != h_hash_b[1] ||
@@ -157,32 +157,32 @@ namespace SignalForge {
     TEST(SHA256Tests, NoisySignal_1024kb_KnownHash)
     {
         uint64_t h_hash[4] = { 0, 0, 0, 0 };
-        TestHelpers::HashWavFile(TestHelpers::TestDataPath("engine_noisy_1024kb_001.wav"), h_hash);
-        EXPECT_EQ(h_hash[0], 0x5729EDF3A35F9EE3ULL);
-        EXPECT_EQ(h_hash[1], 0x54FBA78B4F1D3ABCULL);
-        EXPECT_EQ(h_hash[2], 0x157B07ACBAD0DAB6ULL);
-        EXPECT_EQ(h_hash[3], 0x340D76568C56DC79ULL);
+        TestHelpers::HashWavFile(TestHelpers::TestDataPath("engine_noisy_1024kb_00001.wav", "1024kb"), h_hash);
+        EXPECT_EQ(h_hash[0], 0x49E217F8AFB34E1AULL);
+        EXPECT_EQ(h_hash[1], 0x1AD9C817E2335A35ULL);
+        EXPECT_EQ(h_hash[2], 0xC0F5AEDB9FE4D4D8ULL);
+        EXPECT_EQ(h_hash[3], 0x33DD4C580C1F0FF4ULL);
     }
 
     // --- Anomaly signals ---
     TEST(SHA256Tests, AnomalySignal_500kb_KnownHash)
     {
         uint64_t h_hash[4] = { 0, 0, 0, 0 };
-        TestHelpers::HashWavFile(TestHelpers::TestDataPath("engine_anomaly_500kb_001.wav"), h_hash);
-        EXPECT_EQ(h_hash[0], 0xBACAF320DD7876FAULL);
-        EXPECT_EQ(h_hash[1], 0x330E13F4355C8A4AULL);
-        EXPECT_EQ(h_hash[2], 0xEBF6461AA793D9B9ULL);
-        EXPECT_EQ(h_hash[3], 0x820D214AE631E306ULL);
+        TestHelpers::HashWavFile(TestHelpers::TestDataPath("engine_anomaly_500kb_00001.wav", "500kb"), h_hash);
+        EXPECT_EQ(h_hash[0], 0xDC1EDF82C603A075ULL);
+        EXPECT_EQ(h_hash[1], 0x0301817B260C8317ULL);
+        EXPECT_EQ(h_hash[2], 0xCAE34C18D894035BULL);
+        EXPECT_EQ(h_hash[3], 0x3987F836CAB89116ULL);
     }
 
     TEST(SHA256Tests, AnomalySignal_1024kb_KnownHash)
     {
         uint64_t h_hash[4] = { 0, 0, 0, 0 };
-        TestHelpers::HashWavFile(TestHelpers::TestDataPath("engine_anomaly_1024kb_001.wav"), h_hash);
-        EXPECT_EQ(h_hash[0], 0x302AC2C35E2F2812ULL);
-        EXPECT_EQ(h_hash[1], 0xA12A45DB8D3385EAULL);
-        EXPECT_EQ(h_hash[2], 0xF5586797B43A1AC2ULL);
-        EXPECT_EQ(h_hash[3], 0x0D3F372978EDC130ULL);
+        TestHelpers::HashWavFile(TestHelpers::TestDataPath("engine_anomaly_1024kb_00001.wav", "1024kb"), h_hash);
+        EXPECT_EQ(h_hash[0], 0xC8D37BDE3A031EB2ULL);
+        EXPECT_EQ(h_hash[1], 0x992D17C20B15635BULL);
+        EXPECT_EQ(h_hash[2], 0x0564C5EB9936121FULL);
+        EXPECT_EQ(h_hash[3], 0x4B199398AE49C9C4ULL);
     }
 
     // --- Cross-type: clean vs noisy must never match ---
@@ -190,8 +190,8 @@ namespace SignalForge {
     {
         uint64_t h_clean[4] = { 0, 0, 0, 0 };
         uint64_t h_noisy[4] = { 0, 0, 0, 0 };
-        TestHelpers::HashWavFile(TestHelpers::TestDataPath("engine_clean_500kb_001.wav"), h_clean);
-        TestHelpers::HashWavFile(TestHelpers::TestDataPath("engine_noisy_500kb_001.wav"), h_noisy);
+        TestHelpers::HashWavFile(TestHelpers::TestDataPath("engine_clean_500kb_00001.wav", "500kb"), h_clean);
+        TestHelpers::HashWavFile(TestHelpers::TestDataPath("engine_noisy_500kb_00001.wav", "500kb"), h_noisy);
 
         bool different =
             h_clean[0] != h_noisy[0] || h_clean[1] != h_noisy[1] ||
@@ -205,8 +205,8 @@ namespace SignalForge {
     TEST(SHA256Tests, BatchHash_MatchesSingleHash)
     {
         // Hash two files individually, then batch hash them, results must match
-        SignalForge::WavReader reader_a(TestHelpers::TestDataPath("engine_clean_500kb_001.wav"));
-        SignalForge::WavReader reader_b(TestHelpers::TestDataPath("engine_clean_1024kb_001.wav"));
+        SignalForge::WavReader reader_a(TestHelpers::TestDataPath("engine_clean_500kb_00001.wav", "500kb"));
+        SignalForge::WavReader reader_b(TestHelpers::TestDataPath("engine_clean_500kb_00002.wav", "500kb"));
 
         auto pcm_a = reader_a.ReadPCM();
         auto pcm_b = reader_b.ReadPCM();

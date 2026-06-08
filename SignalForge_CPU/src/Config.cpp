@@ -40,6 +40,10 @@ namespace SignalForge {
         else
             config.verbose = false;
 
+        config.redis.host = root.at("redis").at("host").as_string().c_str();
+        config.redis.port = root.at("redis").at("port").as_int64();
+        config.redis.db = root.at("redis").at("db").as_int64();
+
         config.test_data_dir  = root.at("paths").at("test_data_dir").as_string().c_str();
         config.output_dir     = root.at("paths").at("output_dir").as_string().c_str();
         config.input_dir      = root.at("paths").at("input_dir").as_string().c_str();
@@ -53,15 +57,19 @@ namespace SignalForge {
         config.max_file_size_kb         = 2048;
         config.sample_rate              = 44100;
 
-        config.sha256.batch_size        = 5120;
-        config.sha256.threads_per_block = 128;
+        config.sha256.batch_size        = 1024;
+        config.sha256.threads_per_block = 64;
 
-        config.fft.batch_size           = 1024;
+        config.fft.batch_size           = 4096;
         config.fft.threads_per_block    = 256;
-        config.fft_size                 = 65536;
+        config.fft_size                 = 8192;
 
-        config.reader_threads = 1;
+        config.reader_threads = 4;
         config.verbose = false;
+
+        config.redis.host = "127.0.0.1";
+        config.redis.port = 6379;
+        config.redis.db = 0;
 
         config.test_data_dir  = "test_data";
         config.output_dir     = "output";

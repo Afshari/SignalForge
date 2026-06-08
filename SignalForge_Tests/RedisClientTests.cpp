@@ -41,7 +41,7 @@ namespace SignalForge {
     class RedisHashTest : public ::testing::Test
     {
     protected:
-        SignalForge::RedisClient client;
+        SignalForge::RedisClient client = TestHelpers::MakeClient();
 
         void SetUp() override
         {
@@ -129,7 +129,7 @@ namespace SignalForge {
     class RedisMagnitudeTest : public ::testing::Test
     {
     protected:
-        SignalForge::RedisClient client;
+        SignalForge::RedisClient client = TestHelpers::MakeClient();
 
         void SetUp() override
         {

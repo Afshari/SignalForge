@@ -3,15 +3,18 @@
 #include <vector>
 #include <fstream>
 #include <cstdint>
+#include "Config.h"
 #include "WavReader.h"
 #include "RedisClient.h"
 #include "cpu/SignalForge.h"
 
 namespace SignalForge::TestHelpers {
 
-    static std::filesystem::path TestDataPath(const std::string& filename)
+    static std::filesystem::path TestDataPath(const std::string& filename, const std::string& subdir = "")
     {
-        return std::filesystem::current_path() / "test_data" / filename;
+        if (subdir.empty())
+            return std::filesystem::current_path() / "test_data" / filename;
+        return std::filesystem::current_path() / "test_data" / subdir / filename;
     }
 
     // --------------------------------------------------------------------------------
@@ -23,7 +26,9 @@ namespace SignalForge::TestHelpers {
     // --------------------------------------------------------------------------------
     static SignalForge::RedisClient MakeClient()
     {
-        return SignalForge::RedisClient("127.0.0.1", 6379, 1);
+        auto config = SignalForge::Config::Load(
+            std::filesystem::current_path() / "config.json");
+        return SignalForge::RedisClient(config.redis.host, config.redis.port, 1);
     }
 
     // --------------------------------------------------------------------------------

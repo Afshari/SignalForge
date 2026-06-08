@@ -2,11 +2,11 @@
     "output_dir": "../SignalForge_Tests/test_data",
     "sample_rate": 44100,
     "signals": [
-        {"type": "clean",    "size_kb": 500,  "count": 2},
-        {"type": "clean",    "size_kb": 1024, "count": 2},
-        {"type": "noisy",    "size_kb": 500,  "count": 2},
-        {"type": "noisy",    "size_kb": 1024, "count": 2},
-        {"type": "anomaly",  "size_kb": 500,  "count": 2},
-        {"type": "anomaly",  "size_kb": 1024, "count": 2}
+        {"type": "clean",   "size_kb": 500,  "count": 2, "subdir": "500kb"},
+        {"type": "clean",   "size_kb": 1024, "count": 2, "subdir": "1024kb"},
+        {"type": "noisy",   "size_kb": 500,  "count": 2, "subdir": "500kb"},
+        {"type": "noisy",   "size_kb": 1024, "count": 2, "subdir": "1024kb"},
+        {"type": "anomaly", "size_kb": 500,  "count": 2, "subdir": "500kb"},
+        {"type": "anomaly", "size_kb": 1024, "count": 2, "subdir": "1024kb"}
     ]
 }

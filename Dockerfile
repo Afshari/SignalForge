@@ -68,6 +68,10 @@ RUN pip3 install -r requirements.txt
 WORKDIR /app
 COPY . .
 
+COPY . .
+RUN chmod +x scripts/show-config.sh
+ENV PATH="/app/scripts:$PATH"
+
 RUN protoc \
     --proto_path=SignalForge_Proto \
     --cpp_out=SignalForge_Proto \

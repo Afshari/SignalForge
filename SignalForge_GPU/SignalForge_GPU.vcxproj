@@ -93,8 +93,10 @@
     <CudaCompile Include="src\gpu\SignalForge.cu" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="inc\cpu\sha256config.h" />
     <ClInclude Include="inc\cpu\SignalForge.h" />
     <ClInclude Include="inc\gpu\GPUHash.h" />
+    <ClInclude Include="inc\gpu\sha256.cuh" />
     <ClInclude Include="inc\gpu\SignalForge.cuh" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

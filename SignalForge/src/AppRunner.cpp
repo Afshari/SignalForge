@@ -112,7 +112,7 @@ namespace SignalForge {
         std::cout << "[INFO] Found " << files.size() << " .wav files." << std::endl;
 
         // --- Connect to Redis ---
-        RedisClient redis;
+        RedisClient redis(config.redis.host, config.redis.port, config.redis.db);
         bool redisAvailable = redis.Connect();
         if (redisAvailable)
             std::cout << "[INFO] Redis connected - duplicate skipping enabled." << std::endl;
@@ -268,7 +268,7 @@ namespace SignalForge {
         std::cout << "[INFO] FFT size: " << config.fft_size << std::endl;
 
         // --- Connect to Redis ---
-        RedisClient redis;
+        RedisClient redis(config.redis.host, config.redis.port, config.redis.db);
         bool redisAvailable = redis.Connect();
         if (redisAvailable)
             std::cout << "[INFO] Redis connected - FFT caching enabled." << std::endl;

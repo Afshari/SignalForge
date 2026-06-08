@@ -43,6 +43,11 @@ namespace SignalForge {
         ThreadSafeQueue<FFTResult>   m_result_queue;
 
         std::unique_ptr<GrpcReceiverThread> m_grpc_receiver;
+
+        void RunScannerThread();
+        void RunReaderThread();
+        void RunGpuThread();
+        void RunWriterThread();
     };
 
 } // namespace SignalForge

@@ -6,6 +6,7 @@ echo "--- SignalForge config ---"
 python3 -c "
 import json
 c = json.load(open('$CONFIG'))
+print('input_dir  :', c['paths']['input_dir'])
 print('sha256  :', c['kernels']['sha256'])
 print('fft     :', c['kernels']['fft'])
 print('pipeline:', c['pipeline'])

@@ -197,12 +197,12 @@ redis-cli -h redis
 
 List all hashes in production database:
 ```bash
-redis-cli -h redis -n 0 KEYS "hash:*"
+redis-cli -h redis -n 0 KEYS "sha256:*"
 ```
 
 List all hashes in test database:
 ```bash
-redis-cli -h redis -n 1 KEYS "hash:*"
+redis-cli -h redis -n 1 KEYS "sha256:*"
 ```
 
 Count keys in production database:

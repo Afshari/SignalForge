@@ -2,7 +2,7 @@
     "input_dir": "../SignalForge_Tests/test_data",
     "results_dir": "results",
     "redis": {
-        "host": "127.0.0.1",
+        "host": "172.19.7.64",
         "port": 6379,
         "db": 2
     },

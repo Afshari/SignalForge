@@ -15,27 +15,27 @@ namespace SignalForge {
     TEST(FFTTests, OutputSize_IsHalfFFTSizePlusOne)
     {
         uint32_t fft_size = 65536;
-        auto mags = TestHelpers::FFTWavFile(TestHelpers::TestDataPath("engine_clean_500kb_001.wav"), fft_size);
+        auto mags = TestHelpers::FFTWavFile(TestHelpers::TestDataPath("engine_clean_500kb_00001.wav", "500kb"), fft_size);
         EXPECT_EQ(mags.size(), fft_size / 2 + 1);
     }
 
     TEST(FFTTests, AllMagnitudes_AreNonNegative)
     {
-        auto mags = TestHelpers::FFTWavFile(TestHelpers::TestDataPath("engine_clean_500kb_001.wav"));
+        auto mags = TestHelpers::FFTWavFile(TestHelpers::TestDataPath("engine_clean_500kb_00001.wav", "500kb"));
         for (size_t i = 0; i < mags.size(); i++)
             EXPECT_GE(mags[i], 0.0f) << "Negative magnitude at bin " << i;
     }
 
     TEST(FFTTests, AllMagnitudes_AreFinite)
     {
-        auto mags = TestHelpers::FFTWavFile(TestHelpers::TestDataPath("engine_clean_500kb_001.wav"));
+        auto mags = TestHelpers::FFTWavFile(TestHelpers::TestDataPath("engine_clean_500kb_00001.wav", "500kb"));
         for (size_t i = 0; i < mags.size(); i++)
             EXPECT_TRUE(std::isfinite(mags[i])) << "Non-finite at bin " << i;
     }
 
     TEST(FFTTests, SomeMagnitudes_AreNonZero)
     {
-        auto mags = TestHelpers::FFTWavFile(TestHelpers::TestDataPath("engine_clean_500kb_001.wav"));
+        auto mags = TestHelpers::FFTWavFile(TestHelpers::TestDataPath("engine_clean_500kb_00001.wav", "500kb"));
         bool any_nonzero = false;
         for (auto m : mags)
             if (m > 0.0f) { any_nonzero = true; break; }
@@ -48,8 +48,8 @@ namespace SignalForge {
 
     TEST(FFTTests, CleanSignal_IsDeterministic)
     {
-        auto mags_a = TestHelpers::FFTWavFile(TestHelpers::TestDataPath("engine_clean_500kb_001.wav"));
-        auto mags_b = TestHelpers::FFTWavFile(TestHelpers::TestDataPath("engine_clean_500kb_001.wav"));
+        auto mags_a = TestHelpers::FFTWavFile(TestHelpers::TestDataPath("engine_clean_500kb_00001.wav", "500kb"));
+        auto mags_b = TestHelpers::FFTWavFile(TestHelpers::TestDataPath("engine_clean_500kb_00001.wav", "500kb"));
         ASSERT_EQ(mags_a.size(), mags_b.size());
 
         float max_diff = 0.0f;
@@ -60,8 +60,8 @@ namespace SignalForge {
 
     TEST(FFTTests, CleanSignal_TwoFilesMatch)
     {
-        auto mags_a = TestHelpers::FFTWavFile(TestHelpers::TestDataPath("engine_clean_500kb_001.wav"));
-        auto mags_b = TestHelpers::FFTWavFile(TestHelpers::TestDataPath("engine_clean_500kb_002.wav"));
+        auto mags_a = TestHelpers::FFTWavFile(TestHelpers::TestDataPath("engine_clean_500kb_00001.wav", "500kb"));
+        auto mags_b = TestHelpers::FFTWavFile(TestHelpers::TestDataPath("engine_clean_500kb_00002.wav", "500kb"));
         ASSERT_EQ(mags_a.size(), mags_b.size());
 
         float max_diff = 0.0f;
@@ -76,7 +76,7 @@ namespace SignalForge {
         uint32_t sample_rate = 44100;
         uint32_t bin_80hz = (uint32_t)(80.0f * fft_size / sample_rate);
 
-        auto mags = TestHelpers::FFTWavFile(TestHelpers::TestDataPath("engine_clean_500kb_001.wav"), fft_size);
+        auto mags = TestHelpers::FFTWavFile(TestHelpers::TestDataPath("engine_clean_500kb_00001.wav", "500kb"), fft_size);
 
         float peak = 0.0f;
         int   window = 5;
@@ -93,8 +93,8 @@ namespace SignalForge {
 
     TEST(FFTTests, NoisySignal_DiffersFromClean)
     {
-        auto mags_clean = TestHelpers::FFTWavFile(TestHelpers::TestDataPath("engine_clean_500kb_001.wav"));
-        auto mags_noisy = TestHelpers::FFTWavFile(TestHelpers::TestDataPath("engine_noisy_500kb_001.wav"));
+        auto mags_clean = TestHelpers::FFTWavFile(TestHelpers::TestDataPath("engine_clean_500kb_00001.wav", "500kb"));
+        auto mags_noisy = TestHelpers::FFTWavFile(TestHelpers::TestDataPath("engine_noisy_500kb_00001.wav", "500kb"));
         ASSERT_EQ(mags_clean.size(), mags_noisy.size());
 
         bool any_different = false;
@@ -109,8 +109,8 @@ namespace SignalForge {
 
     TEST(FFTTests, NoisySignal_TwoFilesAreDifferent)
     {
-        auto mags_a = TestHelpers::FFTWavFile(TestHelpers::TestDataPath("engine_noisy_500kb_001.wav"));
-        auto mags_b = TestHelpers::FFTWavFile(TestHelpers::TestDataPath("engine_noisy_500kb_002.wav"));
+        auto mags_a = TestHelpers::FFTWavFile(TestHelpers::TestDataPath("engine_noisy_500kb_00001.wav", "500kb"));
+        auto mags_b = TestHelpers::FFTWavFile(TestHelpers::TestDataPath("engine_noisy_500kb_00002.wav", "500kb"));
         ASSERT_EQ(mags_a.size(), mags_b.size());
 
         bool any_different = false;
@@ -133,8 +133,8 @@ namespace SignalForge {
         uint32_t sample_rate = 44100;
         uint32_t bin_1350hz = (uint32_t)(1350.0f * fft_size / sample_rate);
 
-        auto mags_anomaly = TestHelpers::FFTWavFile(TestHelpers::TestDataPath("engine_anomaly_500kb_001.wav"), fft_size);
-        auto mags_clean = TestHelpers::FFTWavFile(TestHelpers::TestDataPath("engine_clean_500kb_001.wav"), fft_size);
+        auto mags_anomaly = TestHelpers::FFTWavFile(TestHelpers::TestDataPath("engine_anomaly_500kb_00001.wav", "500kb"), fft_size);
+        auto mags_clean = TestHelpers::FFTWavFile(TestHelpers::TestDataPath("engine_clean_500kb_00001.wav", "500kb"), fft_size);
 
         float peak_anomaly = 0.0f;
         float peak_clean = 0.0f;
@@ -158,8 +158,8 @@ namespace SignalForge {
 
     TEST(FFTTests, BatchFFT_MatchesSingleFFT)
     {
-        SignalForge::WavReader reader_a(TestHelpers::TestDataPath("engine_clean_500kb_001.wav"));
-        SignalForge::WavReader reader_b(TestHelpers::TestDataPath("engine_clean_500kb_002.wav"));
+        SignalForge::WavReader reader_a(TestHelpers::TestDataPath("engine_clean_500kb_00001.wav", "500kb"));
+        SignalForge::WavReader reader_b(TestHelpers::TestDataPath("engine_clean_500kb_00002.wav", "500kb"));
 
         auto pcm_a = reader_a.ReadPCM();
         auto pcm_b = reader_b.ReadPCM();

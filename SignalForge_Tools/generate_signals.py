@@ -139,12 +139,16 @@ def run_tools_mode(params: dict, output_dir: Path, sample_rate: int) -> None:
             print(f"WARNING: Unknown signal type '{signal_type}', skipping.")
             continue
  
+        subdir = entry.get("subdir", "")
+        out_dir = output_dir / subdir if subdir else output_dir
+        out_dir.mkdir(parents=True, exist_ok=True)
+ 
         print(f"Generating {count}x {signal_type} at ~{size_kb} KB:")
         num_samples = compute_num_samples(size_kb, sample_rate)
  
         for i in range(1, count + 1):
             filename    = f"engine_{signal_type}_{size_kb}kb_{i:05d}.wav"
-            output_path = output_dir / filename
+            output_path = out_dir / filename
             sha256      = generate_file(output_path, signal_type, num_samples, sample_rate, i, count)
             all_hashes[filename] = sha256
  

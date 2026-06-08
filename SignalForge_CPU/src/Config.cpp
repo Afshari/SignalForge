@@ -57,8 +57,8 @@ namespace SignalForge {
         config.max_file_size_kb         = 2048;
         config.sample_rate              = 44100;
 
-        config.sha256.batch_size        = 512;
-        config.sha256.threads_per_block = 128;
+        config.sha256.batch_size        = 1024;
+        config.sha256.threads_per_block = 64;
 
         config.fft.batch_size           = 4096;
         config.fft.threads_per_block    = 256;

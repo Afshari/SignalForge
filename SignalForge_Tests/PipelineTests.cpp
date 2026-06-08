@@ -23,8 +23,8 @@ namespace SignalForge {
             ASSERT_TRUE(client.Connect());
             client.FlushAll();
             config = SignalForge::Config::Load(std::filesystem::current_path() / "config.json");
-            config.test_data_dir = std::filesystem::current_path() / "test_data";
-            config.input_dir = std::filesystem::current_path() / "test_data";
+            config.test_data_dir = std::filesystem::current_path() / "test_data" / "500kb";
+            config.input_dir = std::filesystem::current_path() / "test_data" / "500kb";
             config.output_dir = std::filesystem::current_path() / "output";
             config.redis.db = 1;
         }

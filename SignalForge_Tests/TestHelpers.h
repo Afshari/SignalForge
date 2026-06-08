@@ -10,9 +10,11 @@
 
 namespace SignalForge::TestHelpers {
 
-    static std::filesystem::path TestDataPath(const std::string& filename)
+    static std::filesystem::path TestDataPath(const std::string& filename, const std::string& subdir = "")
     {
-        return std::filesystem::current_path() / "test_data" / filename;
+        if (subdir.empty())
+            return std::filesystem::current_path() / "test_data" / filename;
+        return std::filesystem::current_path() / "test_data" / subdir / filename;
     }
 
     // --------------------------------------------------------------------------------

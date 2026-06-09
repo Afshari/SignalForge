@@ -14,6 +14,8 @@ namespace SignalForge {
 		inline static std::string NowISO8601();
 		inline static std::string HashToHex(const uint64_t* h_hash);
 		inline static std::vector<std::filesystem::path> ScanWavFiles(const std::filesystem::path& dir);
+		inline static std::vector<std::vector<std::filesystem::path>> ScanWavFilesGrouped(
+			const std::filesystem::path& dir);
 	};
 
 	// --------------------------------------------------------------------------------
@@ -56,6 +58,33 @@ namespace SignalForge {
 			paths.push_back(entry.path());
 		}
 		return paths;
+	}
+
+	// --------------------------------------------------------------------------------
+	inline std::vector<std::vector<std::filesystem::path>> Utils::ScanWavFilesGrouped(
+		const std::filesystem::path& dir)
+	{
+		std::vector<std::vector<std::filesystem::path>> groups;
+		if (!std::filesystem::exists(dir))
+			return groups;
+
+		for (const auto& entry : std::filesystem::directory_iterator(dir))
+		{
+			if (!entry.is_directory()) continue;  // skip files in root
+
+			std::vector<std::filesystem::path> group;
+			for (const auto& file : std::filesystem::directory_iterator(entry.path()))
+			{
+				if (!file.is_regular_file()) continue;
+				if (file.path().extension() != ".wav") continue;
+				group.push_back(file.path());
+			}
+
+			if (!group.empty())
+				groups.push_back(std::move(group));
+		}
+
+		return groups;
 	}
 
 } // namespace SignalForge

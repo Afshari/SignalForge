@@ -64,12 +64,19 @@ int main(int argc, char* argv[])
 		}
 		if (args.IsPipelineMode())
 		{
-			auto files = SignalForge::Utils::ScanWavFiles(config.input_dir);
-			std::vector<std::string> filepaths;
-			for (const auto& p : files)
-				filepaths.push_back(p.string());
-			SignalForge::SignalForgePipeline pipeline(filepaths, config);
-			pipeline.Run();
+			auto groups = SignalForge::Utils::ScanWavFilesGrouped(config.input_dir);
+			for (auto& group : groups)
+			{
+				std::vector<std::string> filepaths;
+				for (const auto& p : group)
+					filepaths.push_back(p.string());
+
+				std::cout << "[INFO] Processing group of "
+					<< filepaths.size() << " files." << std::endl;
+
+				SignalForge::SignalForgePipeline pipeline(filepaths, config);
+				pipeline.Run();
+			}
 			return 0;
 		}
 		return SignalForge::AppRunner::RunHash(config);

@@ -7,3 +7,4 @@ grpcio-tools
 redis
 torch
 redis
+xxhash

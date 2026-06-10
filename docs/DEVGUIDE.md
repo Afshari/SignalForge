@@ -95,30 +95,23 @@ cd /app/SignalForge_Tools
 python3 generate_signals.py --params ../SignalForge_Bench/profiling_params.json
 ```
 
-### Pipeline mode (multithreaded: SHA-256 + FFT + Redis)
-```bash
-docker compose --profile run up
-```
+### Pipeline mode - FFT-only (default, no flag needed)
+docker compose --profile shell run --rm shell -c "/app/x64/Release/SignalForge"
 
-### Hash mode (SHA-256 only, sequential)
-```bash
-docker compose --profile shell run shell -c "/app/x64/Release/SignalForge"
-```
+### Pipeline mode - SHA-256 + FFT
+docker compose --profile shell run --rm shell -c "/app/x64/Release/SignalForge --pipeline-sha256"
 
-### FFT mode (cuFFT only, sequential)
-```bash
-docker compose --profile shell run shell -c "/app/x64/Release/SignalForge --fft"
-```
+### Hash mode - SHA-256 only, sequential
+docker compose --profile shell run --rm shell -c "/app/x64/Release/SignalForge --hash"
 
-### Profile mode (SHA-256 with timing)
-```bash
-docker compose --profile shell run shell -c "/app/x64/Release/SignalForge --profile"
-```
+### FFT mode - cuFFT only, sequential
+docker compose --profile shell run --rm shell -c "/app/x64/Release/SignalForge --fft"
+
+### Profile mode - SHA-256 with timing
+docker compose --profile shell run --rm shell -c "/app/x64/Release/SignalForge --profile"
 
 ### gRPC mode
-```bash
-docker compose --profile shell run shell -c "/app/x64/Release/SignalForge --grpc"
-```
+docker compose --profile shell run --rm shell -c "/app/x64/Release/SignalForge --grpc"
 
 ---
 

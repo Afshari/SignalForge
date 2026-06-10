@@ -123,4 +123,32 @@ namespace SignalForge {
         std::filesystem::remove_all(dir);
     }
 
+    TEST(UtilsScanWavFilesTest, RecursiveOneLevel_FindsRootAndSubdirFiles)
+    {
+        auto root = MakeTempDir("scan_wav_recursive");
+        auto subdir = root / "100kb";
+        auto nested = root / "100kb" / "deep";
+        std::filesystem::create_directories(subdir);
+        std::filesystem::create_directories(nested);
+
+        CreateEmptyFile(root / "root.wav");      // depth 0 - include
+        CreateEmptyFile(subdir / "sub.wav");       // depth 1 - include
+        CreateEmptyFile(nested / "deep.wav");      // depth 2 - exclude
+        CreateEmptyFile(root / "notes.json");    // wrong extension - exclude
+
+        auto result = Utils::ScanWavFiles(root);
+
+        ASSERT_EQ(result.size(), 2u);
+
+        std::vector<std::string> names;
+        for (const auto& p : result)
+            names.push_back(p.filename().string());
+
+        std::sort(names.begin(), names.end());
+        EXPECT_EQ(names[0], "root.wav");
+        EXPECT_EQ(names[1], "sub.wav");
+
+        std::filesystem::remove_all(root);
+    }
+
 } // namespace SignalForge

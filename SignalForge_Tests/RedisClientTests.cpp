@@ -221,4 +221,100 @@ namespace SignalForge {
         ASSERT_EQ(out.size(), mags.size());
     }
 
+    // ================================================================================
+    // RedisClientTests - FftMag operations
+    // Keys are xxHash64 hex strings of the magnitude array
+    // Value: raw float array, prefix fft_mag:0:
+    // ================================================================================
+
+    class RedisFftMagTest : public ::testing::Test
+    {
+    protected:
+        SignalForge::RedisClient client = TestHelpers::MakeClient();
+
+        void SetUp() override
+        {
+            ASSERT_TRUE(client.Connect());
+            client.FlushAll();
+        }
+
+        void TearDown() override
+        {
+            client.FlushAll();
+            client.Disconnect();
+        }
+    };
+
+    TEST_F(RedisFftMagTest, SetFftMag_AndGetFftMag_RoundTrip)
+    {
+        std::string xxhash = "a1b2c3d4e5f6a7b8";
+        std::vector<float> mags = { 0.1f, 0.5f, 1.2f, 0.3f, 0.8f };
+
+        EXPECT_TRUE(client.SetFftMag(xxhash, mags.data(), mags.size()));
+
+        std::vector<float> out;
+        EXPECT_TRUE(client.GetFftMag(xxhash, out));
+
+        ASSERT_EQ(out.size(), mags.size());
+        for (size_t i = 0; i < mags.size(); i++)
+            EXPECT_FLOAT_EQ(out[i], mags[i]);
+    }
+
+    TEST_F(RedisFftMagTest, GetFftMag_NonExistentKey_ReturnsFalse)
+    {
+        std::string xxhash = "0000000000000000";
+        std::vector<float> out;
+        EXPECT_FALSE(client.GetFftMag(xxhash, out));
+    }
+
+    TEST_F(RedisFftMagTest, FftMagExists_ReturnsTrueAfterSet)
+    {
+        std::string xxhash = "a1b2c3d4e5f6a7b8";
+        std::vector<float> mags = { 1.0f, 2.0f, 3.0f };
+
+        EXPECT_FALSE(client.FftMagExists(xxhash));
+        client.SetFftMag(xxhash, mags.data(), mags.size());
+        EXPECT_TRUE(client.FftMagExists(xxhash));
+    }
+
+    TEST_F(RedisFftMagTest, FftMagExists_ReturnsFalseForUnknownHash)
+    {
+        std::string xxhash = "ffffffffffffffff";
+        EXPECT_FALSE(client.FftMagExists(xxhash));
+    }
+
+    TEST_F(RedisFftMagTest, SetFftMag_LargeArray_RoundTrip)
+    {
+        std::string xxhash = "a1b2c3d4e5f6a7b8";
+        uint32_t size = 8192 / 2 + 1;
+        std::vector<float> mags(size);
+        for (uint32_t i = 0; i < size; i++)
+            mags[i] = (float)i * 0.001f;
+
+        EXPECT_TRUE(client.SetFftMag(xxhash, mags.data(), size));
+
+        std::vector<float> out;
+        EXPECT_TRUE(client.GetFftMag(xxhash, out));
+
+        ASSERT_EQ(out.size(), size);
+        float max_diff = 0.0f;
+        for (uint32_t i = 0; i < size; i++)
+            max_diff = std::max(max_diff, std::abs(out[i] - mags[i]));
+        EXPECT_LT(max_diff, 1e-6f);
+    }
+
+    TEST_F(RedisFftMagTest, FftMag_And_Magnitudes_SameHash_IndependentEntries)
+    {
+        // Verify fft_mag:0: and fft: prefixes keep entries separate
+        std::string xxhash = "a1b2c3d4e5f6a7b8";
+        std::string sha256 = "9f0148e8d4556e5cd1fed78881d28d86160ae9606b57129a2b5726d536d3701e";
+        std::vector<float> mags = { 0.1f, 0.2f, 0.3f };
+
+        client.SetMagnitudes(sha256, mags.data(), mags.size());
+        client.SetFftMag(xxhash, mags.data(), mags.size());
+
+        EXPECT_TRUE(client.MagnitudesExist(sha256));
+        EXPECT_TRUE(client.FftMagExists(xxhash));
+    }
+
 } // namespace SignalForge

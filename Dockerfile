@@ -35,6 +35,17 @@ RUN git clone https://github.com/redis/hiredis.git && \
     cd ../.. && \
     rm -rf hiredis
 
+# xxHash from source
+RUN git clone https://github.com/Cyan4973/xxHash.git && \
+    cd xxHash && \
+    mkdir build && cd build && \
+    cmake .. -DCMAKE_BUILD_TYPE=Release && \
+    make -j$(nproc) && \
+    make install && \
+    ldconfig && \
+    cd ../.. && \
+    rm -rf xxHash
+
 # gRPC and Protobuf from source - apt version too old, no CMake config files
 RUN apt-get update && apt-get install -y \
     libssl-dev \
@@ -68,7 +79,6 @@ RUN pip3 install -r requirements.txt
 WORKDIR /app
 COPY . .
 
-COPY . .
 RUN chmod +x scripts/show-config.sh
 ENV PATH="/app/scripts:$PATH"
 

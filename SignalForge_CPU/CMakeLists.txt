@@ -11,6 +11,7 @@ link_directories(${Boost_LIBRARY_DIRS})
 
 find_package(gRPC CONFIG REQUIRED)
 find_package(Protobuf REQUIRED)
+find_package(xxHash CONFIG REQUIRED)
 
 set(CPU_SOURCES
     src/CLParser.cpp
@@ -37,6 +38,7 @@ target_link_libraries(SignalForge_CPU PRIVATE
     hiredis::hiredis
     gRPC::grpc++
     protobuf::libprotobuf
+    xxHash::xxhash
 )
 
 add_custom_command(TARGET SignalForge_CPU POST_BUILD

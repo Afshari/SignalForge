@@ -1,34 +1,35 @@
 # SignalForge
 
-A GPU-accelerated distributed pipeline for ingesting, deduplicating, and analyzing real-world signal data. Designed for noisy environments where exact content hashing alone is insufficient — SignalForge uses GPU SHA-256 for fast exact-duplicate filtering, cuFFT for frequency-domain feature extraction, Redis for distributed caching, and a PyTorch LSTM autoencoder for anomaly detection.
+A GPU-accelerated distributed pipeline for ingesting, deduplicating, and analyzing real-world engine sound recordings. SignalForge uses cuFFT on the GPU for frequency-domain feature extraction and deduplication — two signals that sound the same produce near-identical FFT magnitude arrays, which are used as Redis deduplication keys via xxHash64. A PyTorch LSTM autoencoder consumes the stored FFT features for anomaly detection.
+
+SHA-256-based exact deduplication is available as a second pipeline mode (`--pipeline-sha256`) for comparison or byte-level identity checks.
 
 ---
 
 ## Table of Contents
 - [SignalForge](#signalforge)
   - [Table of Contents](#table-of-contents)
-  - [The Problem](#the-problem)
+- [SignalForge](#signalforge-1)
   - [Pipeline Architecture](#pipeline-architecture)
-  - [Current Limitations](#current-limitations)
-  - [Results](#results)
+  - [I/O Optimization](#io-optimization)
   - [Benchmark](#benchmark)
+  - [LSTM Results](#lstm-results)
   - [Project Structure](#project-structure)
   - [Requirements](#requirements)
-  - [| OS              | Windows 10/11, Ubuntu 22.04, Docker               |](#-os---------------windows-1011-ubuntu-2204-docker---------------)
   - [Build \& Run](#build--run)
     - [Windows (Visual Studio)](#windows-visual-studio)
     - [Linux / Docker](#linux--docker)
     - [Run](#run)
   - [Configuration (`config.json`)](#configuration-configjson)
+  - [Redis Key Schema](#redis-key-schema)
   - [Tests](#tests)
   - [Credits](#credits)
 
-## The Problem
+# SignalForge
 
-In a distributed system ingesting signal recordings from multiple sources, two recordings of the same engine under the same conditions will produce different raw bytes due to environmental noise. Traditional content hashing (SHA-256) would treat them as different files and process both. SignalForge solves this with a two-stage approach:
+A GPU-accelerated distributed pipeline for ingesting, deduplicating, and analyzing real-world engine sound recordings. SignalForge uses cuFFT on the GPU for frequency-domain feature extraction and deduplication — two signals that sound the same produce near-identical FFT magnitude arrays, which are used as Redis deduplication keys via xxHash64. A PyTorch LSTM autoencoder consumes the stored FFT features for anomaly detection.
 
-1. **SHA-256 on the GPU** — eliminates exact duplicates instantly
-2. **cuFFT on the GPU** — extracts frequency-domain features from survivors, enabling downstream similarity analysis and anomaly detection
+SHA-256-based exact deduplication is available as a second pipeline mode (`--pipeline-sha256`) for comparison or byte-level identity checks.
 
 ---
 
@@ -36,39 +37,61 @@ In a distributed system ingesting signal recordings from multiple sources, two r
 
 ![Pipeline Architecture](docs/assets/pipeline.svg)
 
-**Stage 1 — Ingestion (two producers in parallel):**
-- Scanner thread reads existing WAV files from `input_dir`
-- gRPC receiver thread accepts files from remote Python clients over the network
+**Default pipeline (`--pipeline`, FFT-only):**
 
-**Stage 2 — Reader:**
-- Pops file paths, reads raw PCM data, batches up to SHA-256 batch size
+1. **Scanner thread** — reads WAV files from `input_dir` (root and one level of subdirectories)
+2. **Reader threads** — read raw PCM data, batch up to `fft.batch_size` files
+3. **GPU worker** — runs cuFFT on each batch, pushes magnitude arrays to result queue
+4. **Redis writer** — computes xxHash64 of each magnitude array, checks for duplicates, stores new results as `fft_mag:0:<xxhash>` in Redis
 
-**Stage 3 — GPU worker (SHA-256 + FFT):**
-- Runs GPU SHA-256 on the entire batch
-- Checks Redis — skips exact duplicates already seen
-- Accumulates survivors and runs cuFFT batch when FFT batch size is reached
+**SHA-256 pipeline (`--pipeline-sha256`):**
 
-**Stage 4 — Redis writer:**
-- Stores SHA-256 hashes with ISO 8601 timestamps (deduplication index)
-- Stores FFT magnitude arrays (frequency features for downstream ML)
+Same as above but the GPU worker runs SHA-256 first, filters exact duplicates via `sha256:<hex>` Redis keys, then runs cuFFT on survivors. Results stored as `fft_mag_sha256:0:<xxhash>`.
 
-**Stage 5 — ML (SignalForge_ML):**
-- LSTM autoencoder reads FFT magnitudes from Redis
-- Flags signals that deviate from the learned normal pattern as anomalies
+**gRPC mode (`--grpc`):**
 
-## Current Limitations
-
-**Scenario 1 (current implementation):** The pipeline requires all input files
-in a batch to be the same size. Mixed file sizes are not yet supported.
-
-Planned — **Scenario 2:** Input files will be organized into subdirectories
-by size (`input/100kb/`, `input/500kb/`, etc.), allowing the pipeline to
-process each size group as a uniform batch. gRPC receiver will route
-incoming files to the correct subdirectory automatically.
+Scanner is replaced by a gRPC receiver that accepts files from remote clients over the network. Incoming files are written to `input_dir` and processed by the same reader/GPU/writer threads.
 
 ---
 
-## Results
+## I/O Optimization
+
+File reading uses `mmap` + `posix_fadvise(POSIX_FADV_SEQUENTIAL)` on Linux instead of `std::ifstream`. This eliminates the double-copy that `ifstream` introduces (kernel buffer → ifstream buffer → user buffer) and maps the file directly into the process address space. `posix_fadvise` tells the OS to prefetch pages aggressively starting at the PCM data offset, not from byte 0.
+
+`std::ifstream` is used as a fallback on Windows via `#ifdef _WIN32`.
+
+This is implemented in `WavReader::ReadPCM()` in `SignalForge_CPU/src/WavReader.cpp`.
+
+---
+
+## Benchmark
+
+Tested on AWS EC2 g4dn.xlarge (Tesla T4, 16GB GPU, Ubuntu 22.04), Docker container, CUDA 12.0, 21,528 mixed-size WAV files.
+
+**C++ pipeline comparison:**
+
+| Pipeline | Total | SHA-256 | FFT | Redis | Throughput |
+|----------|-------|---------|-----|-------|------------|
+| FFT-only (default) | 5.4s | — | 2.5s | 2.2s | ~3,967 files/s |
+| SHA-256 + FFT | 14.1s | 9.5s | 0.6s | 2.4s | ~1,529 files/s |
+
+Removing SHA-256 and using FFT-based deduplication gives **2.5x throughput improvement** on the same hardware. SHA-256 alone accounts for 68% of total pipeline time.
+
+**C++ FFT-only vs Python FFT-only (same hardware):**
+
+| Implementation | Workers | Total | Throughput | vs C++ |
+|----------------|---------|-------|------------|--------|
+| Python (multiprocessing) | 1 | 62.2s | 346 files/s | 11.5x slower |
+| Python (multiprocessing) | 2 | 48.0s | 449 files/s | 8.8x slower |
+| Python (multiprocessing) | 4 | 46.7s | 461 files/s | 8.6x slower |
+| Python (multiprocessing) | 8 | 47.8s | 451 files/s | 8.8x slower |
+| **C++ CUDA (default)** | — | **5.4s** | **3,967 files/s** | **baseline** |
+
+Config: `fft.batch_size=8192`, `fft.threads_per_block=256`, `pipeline.reader_threads=4`
+
+---
+
+## LSTM Results
 
 LSTM autoencoder trained on 200 clean engine signals, tested on 30 anomaly signals:
 
@@ -80,24 +103,6 @@ LSTM autoencoder trained on 200 clean engine signals, tested on 30 anomaly signa
 30/30 anomaly files correctly detected. 0 false positives.
 
 Full ML details → [SignalForge_ML/README.md](SignalForge_ML/README.md)
-
-## Benchmark
-
-Tested on AWS EC2 g4dn.xlarge (Tesla T4, 16GB GPU, Ubuntu 22.04), Docker container, CUDA 12.0.
-
-| File size | Files | SHA-256 | FFT    | Redis  | Total  | Throughput     |
-|-----------|-------|---------|--------|--------|--------|----------------|
-| 100 KB    | 10,004 | 3.0s   | 0.26s  | 0.87s  | 4.6s   | ~2,175 files/s |
-| 500 KB    | 10,010 | 8.2s   | 0.27s  | 0.86s  | 11.1s  | ~902 files/s   |
-
-Config: `sha256.batch_size=1024`, `threads_per_block=64`, `reader_threads=4`
-
-**vs Python baseline (same hardware):**
-
-| File size | C++ pipeline | Python (best) | Speedup |
-|-----------|-------------|---------------|---------|
-| 100 KB    | 4.6s        | 21.9s         | 4.7x    |
-| 500 KB    | 11.1s       | 23.6s         | 2.1x    |
 
 ---
 
@@ -111,7 +116,8 @@ SignalForge/
 ├── SignalForge_Tests/         # GoogleTest unit and integration tests
 ├── SignalForge_ML/            # PyTorch LSTM autoencoder (anomaly detection)
 ├── SignalForge_Tools/         # Python signal generator and gRPC client
-├── SignalForge_Bench/         # NCU/nsys benchmarking tools
+├── SignalForge_Bench/         # Python baseline benchmarks and NCU/nsys profiling tools
+├── scripts/                   # Shell utilities (show-config.sh)
 ├── SignalForge_Proto/         # Protobuf definitions and generated stubs
 ├── docs/                      # Diagrams and documentation assets
 ├── config.json                # Runtime configuration
@@ -124,6 +130,7 @@ SignalForge/
 
 ## Requirements
 
+
 | Component       | Details                                           |
 |-----------------|---------------------------------------------------|
 | GPU             | NVIDIA CUDA-capable (tested on Tesla T4, RTX 3060) |
@@ -132,9 +139,11 @@ SignalForge/
 | Build           | CMake 3.20+                                       |
 | Boost           | 1.91+ (Boost.JSON)                                |
 | Redis           | 7+ (hiredis client)                               |
+| xxHash          | 0.8+ (built from source on Linux, vcpkg on Windows)   |
 | gRPC            | 1.54+ with Protobuf                               |
 | Python          | 3.10+ with PyTorch (ML module)                    |
 | OS              | Windows 10/11, Ubuntu 22.04, Docker               |
+
 ---
 
 ## Build & Run
@@ -155,30 +164,31 @@ docker compose run signalforge
 ### Run
 
 ```bash
-# SHA-256 only (Windows)
-SignalForge.exe
+# FFT-only pipeline - default, no flag needed
+./SignalForge
 
-# SHA-256 + FFT (Windows)
-SignalForge.exe --fft
+# SHA-256 + FFT pipeline
+./SignalForge --pipeline-sha256
 
-# Full multithreaded pipeline (Windows)
-SignalForge.exe --pipeline
+# Hash mode - SHA-256 only, sequential
+./SignalForge --hash
 
-# gRPC distributed mode (Windows)
-SignalForge.exe --grpc
+# FFT mode - cuFFT only, sequential
+./SignalForge --fft
 
-# Profiling mode (Windows)
-SignalForge.exe --profile
+# Profiling mode - SHA-256 with timing
+./SignalForge --profile
 
-# Custom config directory (Windows)
-SignalForge.exe --config path/to/config
+# gRPC distributed mode
+./SignalForge --grpc
 
-# Linux / Docker — same flags, replace SignalForge.exe with ./SignalForge
+# Custom config directory
+./SignalForge --config path/to/config
+
+# Windows - same flags, replace ./SignalForge with SignalForge.exe
 ```
 
-For detailed commands, cleanup, and troubleshooting → [DEVGUIDE.md](docs/DEVGUIDE.md)
-
----
+For detailed commands, Docker profiles, Redis setup, and troubleshooting → [DEVGUIDE.md](docs/DEVGUIDE.md)
 
 ## Configuration (`config.json`)
 
@@ -188,23 +198,38 @@ For detailed commands, cleanup, and troubleshooting → [DEVGUIDE.md](docs/DEVGU
         "max_file_size_kb": 2048,
         "sample_rate": 44100
     },
-    "kernels": {
-        "sha256": { "batch_size": 1024, "threads_per_block": 64 },
-        "fft":    { "batch_size": 1024, "threads_per_block": 256, "fft_size": 65536 }
-    },
     "paths": {
         "input_dir":     "input",
         "output_dir":    "output",
         "test_data_dir": "test_data"
-    }
+    },
+    "kernels": {
+        "sha256": { "batch_size": 1024, "threads_per_block": 64 },
+        "fft":    { "batch_size": 8192, "threads_per_block": 256, "fft_size": 8192 }
+    },
+    "pipeline": { "reader_threads": 4 },
+    "redis": {
+        "host": "redis",
+        "port": 6379,
+        "db": 0
+    },
+    "verbose": true
 }
 ```
+## Redis Key Schema
+
+| Key | Value | Written by |
+|-----|-------|------------|
+| `sha256:<hex>` | ISO 8601 timestamp | SHA-256 pipeline GPU thread |
+| `fft_mag:0:<xxhash>` | Raw float magnitudes | FFT-only pipeline writer thread |
+| `fft_mag_sha256:0:<xxhash>` | Raw float magnitudes | SHA-256 pipeline writer thread |
+
+The `0` in `fft_mag:0:` and `fft_mag_sha256:0:` indicates the entry has not yet been consumed by the LSTM autoencoder. The autoencoder writes `fft_mag:1:` and `fft_mag_sha256:1:` keys after processing.
 
 ---
-
 ## Tests
 
-90 tests across 10 test suites covering SHA-256, FFT, Redis, pipeline, and gRPC:
+123 tests across 10 test suites covering SHA-256, FFT, Redis, pipeline, utils, and gRPC:
 
 ```bash
 # Linux / Docker
@@ -222,3 +247,5 @@ The CUDA SHA-256 implementation in `SignalForge_GPU/src/gpu/SignalForge.cu` is b
 Original implementation by Brad Conte: [crypto-algorithms](https://github.com/B-Con/crypto-algorithms), Public Domain.
 
 The `cuda_sha256_init`, `cuda_sha256_update`, `cuda_sha256_final`, `cuda_sha256_transform`, and `kernel_sha256_hash` functions were copied directly into `SignalForge.cu` and wrapped with `SHA256HashWrapper_CPU` and `SHA256BatchWrapper_CPU` to fit SignalForge's batch processing pipeline.
+
+[xxHash](https://github.com/Cyan4973/xxHash) by Yann Collet. Used for fast non-cryptographic hashing of FFT magnitude arrays for Redis deduplication keys. Released under the BSD 2-Clause License.

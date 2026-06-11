@@ -17,6 +17,11 @@ A GPU-accelerated distributed signal processing pipeline built with CUDA, cuFFT,
     - [Interactive mode](#interactive-mode)
     - [Generate test signals](#generate-test-signals)
     - [Pipeline mode - FFT-only (default, no flag needed)](#pipeline-mode---fft-only-default-no-flag-needed)
+    - [Pipeline mode - SHA-256 + FFT](#pipeline-mode---sha-256--fft)
+    - [Hash mode - SHA-256 only, sequential](#hash-mode---sha-256-only-sequential)
+    - [FFT mode - cuFFT only, sequential](#fft-mode---cufft-only-sequential)
+    - [Profile mode - SHA-256 with timing](#profile-mode---sha-256-with-timing)
+    - [gRPC mode](#grpc-mode)
   - [Tests](#tests)
     - [Test categories](#test-categories)
   - [Redis](#redis)
@@ -40,10 +45,10 @@ A GPU-accelerated distributed signal processing pipeline built with CUDA, cuFFT,
 ![Pipeline Architecture](assets/pipeline.svg)
 
 ### Pipeline stages
-- **Scanner** -- reads file paths from local directory (gRPC will add remote files later)
-- **Reader** -- reads WAV files into memory, batches PCM data
-- **GPU worker** -- runs SHA-256 for duplicate detection, filters via Redis, accumulates survivors, runs cuFFT
-- **Redis writer** -- stores hashes and FFT magnitude fingerprints
+- **Scanner** — reads file paths from `input_dir` (root and one level of subdirectories)
+- **Reader** — reads WAV files into memory, batches PCM data up to `fft.batch_size`
+- **GPU worker** — runs cuFFT on each batch (FFT-only pipeline) or SHA-256 + cuFFT (SHA-256 pipeline)
+- **Redis writer** — computes xxHash64 of magnitude arrays, deduplicates, stores results
 
 ### Signal types
 - **Clean** -- engine fundamental (80Hz) + harmonics, deterministic (same content = same SHA-256)
@@ -109,7 +114,7 @@ docker compose --profile shell run shell
 ```bash
 # Inside container
 cd /app/SignalForge_Tools
-python3 generate_signals.py --params ../SignalForge_Bench/profiling_params.json
+python3 generate_signals.py
 ```
 
 ### Pipeline mode - FFT-only (default, no flag needed)
@@ -117,28 +122,28 @@ python3 generate_signals.py --params ../SignalForge_Bench/profiling_params.json
 docker compose --profile shell run --rm shell -c "/app/x64/Release/SignalForge"
 ```
 
-```bash
 ### Pipeline mode - SHA-256 + FFT
+```bash
 docker compose --profile shell run --rm shell -c "/app/x64/Release/SignalForge --pipeline-sha256"
 ```
 
-```bash
 ### Hash mode - SHA-256 only, sequential
+```bash
 docker compose --profile shell run --rm shell -c "/app/x64/Release/SignalForge --hash"
 ```
 
-```bash
 ### FFT mode - cuFFT only, sequential
+```bash
 docker compose --profile shell run --rm shell -c "/app/x64/Release/SignalForge --fft"
 ```
 
-```bash
 ### Profile mode - SHA-256 with timing
+```bash
 docker compose --profile shell run --rm shell -c "/app/x64/Release/SignalForge --profile"
 ```
 
-```bash
 ### gRPC mode
+```bash
 docker compose --profile shell run --rm shell -c "/app/x64/Release/SignalForge --grpc"
 ```
 
@@ -217,34 +222,30 @@ redis-cli -h redis
 
 ### Inspect data
 
-List all hashes in production database:
+List FFT-only pipeline magnitudes in production database:
 ```bash
-redis-cli -h redis -n 0 KEYS "sha256:*"
+redis-cli -h redis -n 0 KEYS "fft_mag:0:*"
 ```
 
-List all hashes in test database:
+List SHA-256 pipeline magnitudes in production database:
 ```bash
-redis-cli -h redis -n 1 KEYS "sha256:*"
+redis-cli -h redis -n 0 KEYS "fft_mag_sha256:0:*"
 ```
 
-Count keys in production database:
+List unconsumed magnitudes (not yet processed by autoencoder):
 ```bash
-redis-cli -h redis -n 0 DBSIZE
+redis-cli -h redis -n 0 KEYS "fft_mag:0:*" 
 ```
 
-Count keys in test database:
+List consumed magnitudes (processed by autoencoder):
 ```bash
-redis-cli -h redis -n 1 DBSIZE
-```
-
-List FFT magnitudes in production database:
-```bash
-redis-cli -h redis -n 0 KEYS "fft:*"
+redis-cli -h redis -n 0 KEYS "fft_mag:1:*"
 ```
 
 ### Redis databases
 - **db=0** -- production data (hashes and magnitudes)
 - **db=1** -- test data (used by integration tests, safe to flush)
+- **db=2** -- Python baseline benchmark data (safe to flush)
 
 ### Persistence
 RDB snapshots configured in `/etc/redis/redis.conf`:
@@ -281,13 +282,17 @@ Run the Python multiprocessing baseline to compare against SignalForge C++/CUDA:
 docker compose up -d redis
 docker compose --profile shell run shell
 
-# Inside container
+# Inside container — FFT-only baseline (compares against default pipeline)
 cd /app/SignalForge_Bench
-python3 run_baseline.py
+python3 run_baseline_fft.py
+
+# Inside container — SHA-256 + FFT baseline (compares against --pipeline-sha256)
+python3 run_baseline_fft_sha256.py
 ```
 
-Results saved to `SignalForge_Bench/results/baseline_<timestamp>.csv`.
-Configure worker count and file sizes in `baseline_params.json`.
+Results saved to `SignalForge_Bench/results/baseline_fft_<timestamp>.csv`.
+Configure worker count, input directory, and Redis host in `baseline_params.json`.
+Run `python3 run_baseline_fft.py --list-params` to see all available parameters.
 
 ---
 

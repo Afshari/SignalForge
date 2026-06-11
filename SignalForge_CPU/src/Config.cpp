@@ -60,7 +60,7 @@ namespace SignalForge {
         config.sha256.batch_size        = 1024;
         config.sha256.threads_per_block = 64;
 
-        config.fft.batch_size           = 4096;
+        config.fft.batch_size           = 8192;
         config.fft.threads_per_block    = 256;
         config.fft_size                 = 8192;
 

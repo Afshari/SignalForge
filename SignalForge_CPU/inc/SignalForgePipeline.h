@@ -33,6 +33,7 @@ namespace SignalForge {
         std::atomic<int>             m_readers_done{ 0 };
         
         bool m_sha256_mode = false;
+        size_t m_reader_batch_size = 0;
 
         // Stage 0->1: file paths
         // gRPC will push into this queue later as a second producer

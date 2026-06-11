@@ -20,6 +20,9 @@ namespace SignalForge {
 		, m_config(std::move(config))
 		, m_sha256_mode(sha256_mode)
 	{
+		m_reader_batch_size = m_sha256_mode
+			? m_config.sha256.batch_size
+			: m_config.fft.batch_size;
 	}
 
 	// --------------------------------------------------------------------------------
@@ -38,7 +41,7 @@ namespace SignalForge {
 		std::jthread t_scanner([this]() { RunScannerThread(); });
 
 		// --- Thread 2: Reader ---
-		// Pops file paths, reads PCM data, accumulates up to sha256 batch size,
+		// Pops file paths, reads PCM data, accumulates up to m_reader_batch_size,
 		// then pushes a WavBatch into m_wav_queue.
 		std::vector<std::jthread> t_readers;
 		for (uint32_t r = 0; r < m_config.reader_threads; r++)
@@ -89,7 +92,7 @@ namespace SignalForge {
 				batch.pcm_data.push_back(reader.ReadPCM());
 				total++;
 
-				if (batch.pcm_data.size() >= m_config.sha256.batch_size)
+				if (batch.pcm_data.size() >= m_reader_batch_size)
 				{
 					m_wav_queue.push(std::move(batch));
 					batch = WavBatch{};

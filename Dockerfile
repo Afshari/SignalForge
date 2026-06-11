@@ -37,13 +37,11 @@ RUN git clone https://github.com/redis/hiredis.git && \
 
 # xxHash from source
 RUN git clone https://github.com/Cyan4973/xxHash.git && \
-    cd xxHash && \
-    mkdir build && cd build && \
-    cmake .. -DCMAKE_BUILD_TYPE=Release && \
-    make -j$(nproc) && \
-    make install && \
+    cmake -S xxHash/build/cmake -B xxHash/_build \
+          -DCMAKE_BUILD_TYPE=Release && \
+    cmake --build xxHash/_build -j$(nproc) && \
+    cmake --install xxHash/_build && \
     ldconfig && \
-    cd ../.. && \
     rm -rf xxHash
 
 # gRPC and Protobuf from source - apt version too old, no CMake config files

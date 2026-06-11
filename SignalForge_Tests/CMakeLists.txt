@@ -12,6 +12,7 @@ link_directories(${Boost_LIBRARY_DIRS})
 
 find_package(gRPC CONFIG REQUIRED)
 find_package(Protobuf REQUIRED)
+find_package(xxHash CONFIG REQUIRED)
 
 # GoogleTest
 include(FetchContent)
@@ -32,6 +33,7 @@ set(TEST_SOURCES
     RedisClientTests.cpp
     PipelineTests.cpp
     GrpcTests.cpp
+    UtilsTests.cpp
 )
 
 add_executable(SignalForge_Tests ${TEST_SOURCES})
@@ -55,6 +57,7 @@ target_link_libraries(SignalForge_Tests PRIVATE
     gtest_main
     gRPC::grpc++
     protobuf::libprotobuf
+    xxHash::xxhash
 )
 
 # Copy config.json and test_data next to test executable

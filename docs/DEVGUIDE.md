@@ -4,19 +4,36 @@ A GPU-accelerated distributed signal processing pipeline built with CUDA, cuFFT,
 
 ## Contents
 
-- [Pipeline Stages](#pipeline-stages)
-- [Signal Types](#signal-types)
-- [Project Structure](#project-structure)
-- [Build](#build)
-- [Run](#run)
-- [Tests](#tests)
-- [Redis](#redis)
-- [NCU Profiling](#ncu-profiling)
-- [Python Baseline Benchmark](#python-baseline-benchmark)
-- [Git](#git)
-- [Docker Compose](#docker-compose)
-- [AWS](#aws-g4dnxlarge-tesla-t4)
-- [Environment Variables](#environment-variables)
+- [SignalForge](#signalforge)
+  - [Contents](#contents)
+  - [Architecture](#architecture)
+    - [Pipeline stages](#pipeline-stages)
+    - [Signal types](#signal-types)
+  - [Project Structure](#project-structure)
+  - [Build](#build)
+    - [Windows (Visual Studio 2022)](#windows-visual-studio-2022)
+    - [Linux / Docker](#linux--docker)
+  - [Run](#run)
+    - [Interactive mode](#interactive-mode)
+    - [Generate test signals](#generate-test-signals)
+    - [Pipeline mode - FFT-only (default, no flag needed)](#pipeline-mode---fft-only-default-no-flag-needed)
+  - [Tests](#tests)
+    - [Test categories](#test-categories)
+  - [Redis](#redis)
+    - [WSL2 (Windows development)](#wsl2-windows-development)
+    - [Docker](#docker)
+    - [Inspect data](#inspect-data)
+    - [Redis databases](#redis-databases)
+    - [Persistence](#persistence)
+  - [NCU Profiling](#ncu-profiling)
+    - [Profiling results summary](#profiling-results-summary)
+  - [Python Baseline Benchmark](#python-baseline-benchmark)
+  - [Git](#git)
+    - [Important notes](#important-notes)
+    - [Branch strategy](#branch-strategy)
+  - [Docker Compose](#docker-compose)
+  - [AWS (g4dn.xlarge, Tesla T4)](#aws-g4dnxlarge-tesla-t4)
+  - [Environment Variables](#environment-variables)
 
 ## Architecture
 
@@ -96,22 +113,34 @@ python3 generate_signals.py --params ../SignalForge_Bench/profiling_params.json
 ```
 
 ### Pipeline mode - FFT-only (default, no flag needed)
+```bash
 docker compose --profile shell run --rm shell -c "/app/x64/Release/SignalForge"
+```
 
+```bash
 ### Pipeline mode - SHA-256 + FFT
 docker compose --profile shell run --rm shell -c "/app/x64/Release/SignalForge --pipeline-sha256"
+```
 
+```bash
 ### Hash mode - SHA-256 only, sequential
 docker compose --profile shell run --rm shell -c "/app/x64/Release/SignalForge --hash"
+```
 
+```bash
 ### FFT mode - cuFFT only, sequential
 docker compose --profile shell run --rm shell -c "/app/x64/Release/SignalForge --fft"
+```
 
+```bash
 ### Profile mode - SHA-256 with timing
 docker compose --profile shell run --rm shell -c "/app/x64/Release/SignalForge --profile"
+```
 
+```bash
 ### gRPC mode
 docker compose --profile shell run --rm shell -c "/app/x64/Release/SignalForge --grpc"
+```
 
 ---
 

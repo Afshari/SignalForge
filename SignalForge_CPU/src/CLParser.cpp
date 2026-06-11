@@ -23,8 +23,12 @@ namespace SignalForge {
                 parser.m_fftMode = true;
             else if (arg == "--pipeline")
                 parser.m_pipelineMode = true;
+            else if (arg == "--pipeline-sha256")
+                parser.m_pipelineSha256Mode = true;
             else if (arg == "--grpc")
                 parser.m_grpcMode = true;
+            else if (arg == "--hash")
+                parser.m_hashMode = true;
             else if (arg == "--config" && i + 1 < argc)
                 parser.m_configDir = std::filesystem::weakly_canonical(
                     std::filesystem::path(argv[++i])

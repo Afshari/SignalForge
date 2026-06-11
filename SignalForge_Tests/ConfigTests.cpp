@@ -22,7 +22,7 @@ namespace SignalForge {
 		"file": { "max_file_size_kb": 2048, "sample_rate": 44100 },
 		"kernels": {
 			"sha256": { "batch_size": 1024, "threads_per_block": 64 },
-			"fft": { "batch_size": 1024, "threads_per_block": 256, "fft_size": 65536 }
+			"fft": { "batch_size": 8192, "threads_per_block": 256, "fft_size": 8192 }
 		},
 		"paths": { "test_data_dir": "test_data", "output_dir": "output", "input_dir": "input" },
 		"redis": { "host": "127.0.0.1", "port": 6379, "db": 1 }
@@ -39,7 +39,7 @@ namespace SignalForge {
 		EXPECT_EQ(config.sample_rate, 44100u);
 		EXPECT_EQ(config.sha256.batch_size, 1024u);
 		EXPECT_EQ(config.sha256.threads_per_block, 64u);
-		EXPECT_EQ(config.fft.batch_size, 4096u);
+		EXPECT_EQ(config.fft.batch_size, 8192u);
 		EXPECT_EQ(config.fft.threads_per_block, 256u);
 		EXPECT_EQ(config.fft_size, 8192u);
 		EXPECT_EQ(config.test_data_dir, std::filesystem::path("test_data"));
@@ -81,7 +81,7 @@ namespace SignalForge {
 		EXPECT_EQ(config.sample_rate, 44100u);
 		EXPECT_EQ(config.sha256.batch_size, 1024u);
 		EXPECT_EQ(config.sha256.threads_per_block, 64u);
-		EXPECT_EQ(config.fft.batch_size, 4096u);
+		EXPECT_EQ(config.fft.batch_size, 8192u);
 		EXPECT_EQ(config.fft.threads_per_block, 256u);
 		EXPECT_EQ(config.fft_size, 8192u);
 		EXPECT_EQ(config.test_data_dir, std::filesystem::path("test_data"));

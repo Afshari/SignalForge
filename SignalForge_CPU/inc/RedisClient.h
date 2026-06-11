@@ -32,6 +32,19 @@ namespace SignalForge {
         bool GetMagnitudes(const std::string& hash, std::vector<float>& out);
         bool MagnitudesExist(const std::string& hash);
 
+        // FFT magnitude deduplication
+        // key: xxHash64 hex string of the magnitude array
+        // value: raw float array (fft_size/2+1 floats)
+        bool SetFftMag(const std::string& xxhash_hex, const float* data, uint32_t size);
+        bool GetFftMag(const std::string& xxhash_hex, std::vector<float>& out);
+        bool FftMagExists(const std::string& xxhash_hex);
+
+        // SHA-256 pipeline FFT magnitude deduplication
+        // key: xxHash64 hex string, prefix fft_mag_sha256:0:
+        bool SetFftMagSha256(const std::string& xxhash_hex, const float* data, uint32_t size);
+        bool FftMagSha256Exists(const std::string& xxhash_hex);
+        bool GetFftMagSha256(const std::string& xxhash_hex, std::vector<float>& out);
+
         // Utility
         bool Ping();
         void FlushAll();

@@ -27,6 +27,7 @@ find_package(hiredis CONFIG REQUIRED)
 
 find_package(Protobuf REQUIRED)
 find_package(gRPC CONFIG REQUIRED)
+find_package(xxHash CONFIG REQUIRED)
 
 # Boost — installed from source at /usr/local on Linux
 # On Windows pass -DBOOST_ROOT=... or set BOOST_ROOT env var

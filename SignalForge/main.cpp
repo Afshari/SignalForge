@@ -27,10 +27,11 @@ int main(int argc, char* argv[])
 	SignalForge::CLParser args = SignalForge::CLParser::Parse(argc, argv);
 
 	std::string mode = args.IsProfileMode() ? "PROFILE"
-		: args.IsFftMode() ? "FFT"
-		: args.IsPipelineMode() ? "PIPELINE"
-		: args.IsGrpcMode() ? "GRPC"
-		: "HASH";
+		: args.IsFftMode()					? "FFT"
+		: args.IsHashMode()					? "HASH"
+		: args.IsPipelineSha256Mode()		? "PIPELINE-SHA256"
+		: args.IsGrpcMode()					? "GRPC"
+		: "PIPELINE";
 
 	std::cout << "[INFO] Config dir: " << args.GetConfigDir() << std::endl;
 	std::cout << "[INFO] Mode: " << mode << std::endl;
@@ -50,6 +51,7 @@ int main(int argc, char* argv[])
 	{
 		if (args.IsProfileMode()) return SignalForge::AppRunner::RunProfile(config);
 		if (args.IsFftMode())     return SignalForge::AppRunner::RunFFT(config);
+		if (args.IsHashMode())    return SignalForge::AppRunner::RunHash(config);
 		if (args.IsGrpcMode())
 		{
 			std::signal(SIGINT, SignalHandler);
@@ -62,17 +64,24 @@ int main(int argc, char* argv[])
 			g_pipeline = nullptr;
 			return 0;
 		}
-		if (args.IsPipelineMode())
+		if (args.IsPipelineSha256Mode())
 		{
 			auto files = SignalForge::Utils::ScanWavFiles(config.input_dir);
 			std::vector<std::string> filepaths;
 			for (const auto& p : files)
 				filepaths.push_back(p.string());
-			SignalForge::SignalForgePipeline pipeline(filepaths, config);
+			SignalForge::SignalForgePipeline pipeline(filepaths, config, true);
 			pipeline.Run();
 			return 0;
 		}
-		return SignalForge::AppRunner::RunHash(config);
+		
+		auto files = SignalForge::Utils::ScanWavFiles(config.input_dir);
+		std::vector<std::string> filepaths;
+		for (const auto& p : files)
+			filepaths.push_back(p.string());
+		SignalForge::SignalForgePipeline pipeline(filepaths, config);
+		pipeline.Run();
+		return 0;
 	}
 	catch (const std::exception& e)
 	{

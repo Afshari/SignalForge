@@ -4,29 +4,51 @@ A GPU-accelerated distributed signal processing pipeline built with CUDA, cuFFT,
 
 ## Contents
 
-- [Pipeline Stages](#pipeline-stages)
-- [Signal Types](#signal-types)
-- [Project Structure](#project-structure)
-- [Build](#build)
-- [Run](#run)
-- [Tests](#tests)
-- [Redis](#redis)
-- [NCU Profiling](#ncu-profiling)
-- [Python Baseline Benchmark](#python-baseline-benchmark)
-- [Git](#git)
-- [Docker Compose](#docker-compose)
-- [AWS](#aws-g4dnxlarge-tesla-t4)
-- [Environment Variables](#environment-variables)
+- [SignalForge](#signalforge)
+  - [Contents](#contents)
+  - [Architecture](#architecture)
+    - [Pipeline stages](#pipeline-stages)
+    - [Signal types](#signal-types)
+  - [Project Structure](#project-structure)
+  - [Build](#build)
+    - [Windows (Visual Studio 2022)](#windows-visual-studio-2022)
+    - [Linux / Docker](#linux--docker)
+  - [Run](#run)
+    - [Interactive mode](#interactive-mode)
+    - [Generate test signals](#generate-test-signals)
+    - [Pipeline mode - FFT-only (default, no flag needed)](#pipeline-mode---fft-only-default-no-flag-needed)
+    - [Pipeline mode - SHA-256 + FFT](#pipeline-mode---sha-256--fft)
+    - [Hash mode - SHA-256 only, sequential](#hash-mode---sha-256-only-sequential)
+    - [FFT mode - cuFFT only, sequential](#fft-mode---cufft-only-sequential)
+    - [Profile mode - SHA-256 with timing](#profile-mode---sha-256-with-timing)
+    - [gRPC mode](#grpc-mode)
+  - [Tests](#tests)
+    - [Test categories](#test-categories)
+  - [Redis](#redis)
+    - [WSL2 (Windows development)](#wsl2-windows-development)
+    - [Docker](#docker)
+    - [Inspect data](#inspect-data)
+    - [Redis databases](#redis-databases)
+    - [Persistence](#persistence)
+  - [NCU Profiling](#ncu-profiling)
+    - [Profiling results summary](#profiling-results-summary)
+  - [Python Baseline Benchmark](#python-baseline-benchmark)
+  - [Git](#git)
+    - [Important notes](#important-notes)
+    - [Branch strategy](#branch-strategy)
+  - [Docker Compose](#docker-compose)
+  - [AWS (g4dn.xlarge, Tesla T4)](#aws-g4dnxlarge-tesla-t4)
+  - [Environment Variables](#environment-variables)
 
 ## Architecture
 
 ![Pipeline Architecture](assets/pipeline.svg)
 
 ### Pipeline stages
-- **Scanner** -- reads file paths from local directory (gRPC will add remote files later)
-- **Reader** -- reads WAV files into memory, batches PCM data
-- **GPU worker** -- runs SHA-256 for duplicate detection, filters via Redis, accumulates survivors, runs cuFFT
-- **Redis writer** -- stores hashes and FFT magnitude fingerprints
+- **Scanner** — reads file paths from `input_dir` (root and one level of subdirectories)
+- **Reader** — reads WAV files into memory, batches PCM data up to `fft.batch_size`
+- **GPU worker** — runs cuFFT on each batch (FFT-only pipeline) or SHA-256 + cuFFT (SHA-256 pipeline)
+- **Redis writer** — computes xxHash64 of magnitude arrays, deduplicates, stores results
 
 ### Signal types
 - **Clean** -- engine fundamental (80Hz) + harmonics, deterministic (same content = same SHA-256)
@@ -92,32 +114,37 @@ docker compose --profile shell run shell
 ```bash
 # Inside container
 cd /app/SignalForge_Tools
-python3 generate_signals.py --params ../SignalForge_Bench/profiling_params.json
+python3 generate_signals.py
 ```
 
-### Pipeline mode (multithreaded: SHA-256 + FFT + Redis)
+### Pipeline mode - FFT-only (default, no flag needed)
 ```bash
-docker compose --profile run up
+docker compose --profile shell run --rm shell -c "/app/x64/Release/SignalForge"
 ```
 
-### Hash mode (SHA-256 only, sequential)
+### Pipeline mode - SHA-256 + FFT
 ```bash
-docker compose --profile shell run shell -c "/app/x64/Release/SignalForge"
+docker compose --profile shell run --rm shell -c "/app/x64/Release/SignalForge --pipeline-sha256"
 ```
 
-### FFT mode (cuFFT only, sequential)
+### Hash mode - SHA-256 only, sequential
 ```bash
-docker compose --profile shell run shell -c "/app/x64/Release/SignalForge --fft"
+docker compose --profile shell run --rm shell -c "/app/x64/Release/SignalForge --hash"
 ```
 
-### Profile mode (SHA-256 with timing)
+### FFT mode - cuFFT only, sequential
 ```bash
-docker compose --profile shell run shell -c "/app/x64/Release/SignalForge --profile"
+docker compose --profile shell run --rm shell -c "/app/x64/Release/SignalForge --fft"
+```
+
+### Profile mode - SHA-256 with timing
+```bash
+docker compose --profile shell run --rm shell -c "/app/x64/Release/SignalForge --profile"
 ```
 
 ### gRPC mode
 ```bash
-docker compose --profile shell run shell -c "/app/x64/Release/SignalForge --grpc"
+docker compose --profile shell run --rm shell -c "/app/x64/Release/SignalForge --grpc"
 ```
 
 ---
@@ -195,34 +222,30 @@ redis-cli -h redis
 
 ### Inspect data
 
-List all hashes in production database:
+List FFT-only pipeline magnitudes in production database:
 ```bash
-redis-cli -h redis -n 0 KEYS "sha256:*"
+redis-cli -h redis -n 0 KEYS "fft_mag:0:*"
 ```
 
-List all hashes in test database:
+List SHA-256 pipeline magnitudes in production database:
 ```bash
-redis-cli -h redis -n 1 KEYS "sha256:*"
+redis-cli -h redis -n 0 KEYS "fft_mag_sha256:0:*"
 ```
 
-Count keys in production database:
+List unconsumed magnitudes (not yet processed by autoencoder):
 ```bash
-redis-cli -h redis -n 0 DBSIZE
+redis-cli -h redis -n 0 KEYS "fft_mag:0:*" 
 ```
 
-Count keys in test database:
+List consumed magnitudes (processed by autoencoder):
 ```bash
-redis-cli -h redis -n 1 DBSIZE
-```
-
-List FFT magnitudes in production database:
-```bash
-redis-cli -h redis -n 0 KEYS "fft:*"
+redis-cli -h redis -n 0 KEYS "fft_mag:1:*"
 ```
 
 ### Redis databases
 - **db=0** -- production data (hashes and magnitudes)
 - **db=1** -- test data (used by integration tests, safe to flush)
+- **db=2** -- Python baseline benchmark data (safe to flush)
 
 ### Persistence
 RDB snapshots configured in `/etc/redis/redis.conf`:
@@ -259,13 +282,17 @@ Run the Python multiprocessing baseline to compare against SignalForge C++/CUDA:
 docker compose up -d redis
 docker compose --profile shell run shell
 
-# Inside container
+# Inside container — FFT-only baseline (compares against default pipeline)
 cd /app/SignalForge_Bench
-python3 run_baseline.py
+python3 run_baseline_fft.py
+
+# Inside container — SHA-256 + FFT baseline (compares against --pipeline-sha256)
+python3 run_baseline_fft_sha256.py
 ```
 
-Results saved to `SignalForge_Bench/results/baseline_<timestamp>.csv`.
-Configure worker count and file sizes in `baseline_params.json`.
+Results saved to `SignalForge_Bench/results/baseline_fft_<timestamp>.csv`.
+Configure worker count, input directory, and Redis host in `baseline_params.json`.
+Run `python3 run_baseline_fft.py --list-params` to see all available parameters.
 
 ---
 

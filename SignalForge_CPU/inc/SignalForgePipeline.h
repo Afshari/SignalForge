@@ -15,7 +15,7 @@ namespace SignalForge {
         // filepaths: list of .wav files to process (from local directory scan)
         // config: batch sizes, fft_size, Redis connection, etc.
         SignalForgePipeline(const std::vector<std::string>& filepaths,
-            Config config);
+            Config config, bool sha256_mode = false);
 
         // Launches all pipeline threads and blocks until processing is complete.
         // Thread order:
@@ -31,6 +31,9 @@ namespace SignalForge {
         std::vector<std::string>     m_filepaths;
         Config                       m_config;
         std::atomic<int>             m_readers_done{ 0 };
+        
+        bool m_sha256_mode = false;
+        size_t m_reader_batch_size = 0;
 
         // Stage 0->1: file paths
         // gRPC will push into this queue later as a second producer
@@ -47,7 +50,9 @@ namespace SignalForge {
         void RunScannerThread();
         void RunReaderThread();
         void RunGpuThread();
-        void RunWriterThread();
+        void RunWriterThread();        // default - FFT-only, xxHash64 + SetFftMag
+        void RunWriterThreadSha256();  // SHA-256 pipeline - uses SetMagnitudes
+        void RunGpuThreadSha256();     // SHA-256 pipeline - runs SHA-256 filter before FFT
     };
 
 } // namespace SignalForge

@@ -49,10 +49,15 @@ namespace SignalForge {
 		if (!std::filesystem::exists(dir))
 			return paths;
 
-		for (const auto& entry : std::filesystem::directory_iterator(dir))
+		for (const auto& entry : std::filesystem::recursive_directory_iterator(dir))
 		{
 			if (!entry.is_regular_file()) continue;
 			if (entry.path().extension() != ".wav") continue;
+
+			// accept files in root dir or exactly one level deep
+			auto parent = entry.path().parent_path();
+			if (parent != dir && parent.parent_path() != dir) continue;
+
 			paths.push_back(entry.path());
 		}
 		return paths;

@@ -5,6 +5,7 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(CUDAToolkit REQUIRED)
+find_package(xxHash CONFIG REQUIRED)
 
 set(Boost_NO_WARN_NEW_VERSIONS 1)
 find_package(Boost 1.91 REQUIRED COMPONENTS json)
@@ -37,6 +38,7 @@ target_link_libraries(SignalForge PRIVATE
     hiredis::hiredis
     gRPC::grpc++
     protobuf::libprotobuf
+    xxHash::xxhash
 )
 
 add_custom_command(TARGET SignalForge POST_BUILD

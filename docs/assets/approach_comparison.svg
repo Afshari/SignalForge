@@ -1,0 +1,20 @@
+<svg width="680" height="220" viewBox="0 0 680 220" xmlns="http://www.w3.org/2000/svg" role="img">
+<title>Total pipeline time comparison</title>
+<desc>Python FFT baseline takes 46 seconds, GPU SHA-256 pipeline takes 8 seconds, GPU FFT pipeline (default) takes 5 seconds, for the same dataset.</desc>
+
+<!-- Python bar -->
+<text x="20" y="38" font-family="Arial, sans-serif" font-size="14" font-weight="500" fill="#444441">Python (FFT)</text>
+<rect x="20" y="48" width="620" height="28" rx="4" fill="#D3D1C7"/>
+<text x="665" y="67" font-family="Arial, sans-serif" font-size="13" font-weight="500" fill="#2C2C2A" text-anchor="end">44s</text>
+
+<!-- GPU SHA-256 bar -->
+<text x="20" y="103" font-family="Arial, sans-serif" font-size="14" font-weight="500" fill="#854F0B">GPU pipeline, SHA-256</text>
+<rect x="20" y="113" width="140" height="28" rx="4" fill="#FAC775"/>
+<text x="162" y="132" font-family="Arial, sans-serif" font-size="13" font-weight="500" fill="#412402">10.2s</text>
+
+<!-- GPU FFT bar -->
+<text x="20" y="170" font-family="Arial, sans-serif" font-size="14" font-weight="500" fill="#0F6E56">GPU pipeline, FFT (default)</text>
+<rect x="20" y="180" width="73" height="28" rx="4" fill="#9FE1CB"/>
+<text x="98" y="198" font-family="Arial, sans-serif" font-size="13" font-weight="500" fill="#04342C">5s</text>
+
+</svg>

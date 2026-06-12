@@ -71,5 +71,8 @@
     <ClInclude Include="inc\GrpcReceiverThread.h">
       <Filter>inc</Filter>
     </ClInclude>
+    <ClInclude Include="inc\SHA256Result.h">
+      <Filter>inc</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

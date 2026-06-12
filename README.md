@@ -1,19 +1,22 @@
 # SignalForge
 
-A GPU-accelerated distributed pipeline for ingesting, deduplicating, and analyzing real-world engine sound recordings. SignalForge uses cuFFT on the GPU for frequency-domain feature extraction and deduplication — two signals that sound the same produce near-identical FFT magnitude arrays, which are used as Redis deduplication keys via xxHash64. A PyTorch LSTM autoencoder consumes the stored FFT features for anomaly detection.
+A GPU-accelerated distributed pipeline for ingesting and deduplicating real-world engine sound recordings. Two independent pipelines are implemented for comparison: a GPU FFT-based pipeline (default) and a GPU SHA-256 pipeline (`--pipeline-sha256`, the industry-standard approach).
 
-SHA-256-based exact deduplication is available as a second pipeline mode (`--pipeline-sha256`) for comparison or byte-level identity checks.
+A Python multiprocessing baseline implementing the same FFT-based approach was also built for comparison. The C++/CUDA implementation is **8.7x faster** on the same hardware — the reason this project exists as a CUDA pipeline rather than a Python script. See [Benchmark](#benchmark) for details.
+
+SHA-256 is the general-purpose default, and for good reason — it's simple and reliable. But for this domain, understanding the structure of the data reveals a faster, equally valid alternative: GPU-accelerated FFT.
+
+![Approach comparison](docs/assets/approach_comparison.svg)
 
 ---
 
 ## Table of Contents
 - [SignalForge](#signalforge)
   - [Table of Contents](#table-of-contents)
-- [SignalForge](#signalforge-1)
   - [Pipeline Architecture](#pipeline-architecture)
   - [I/O Optimization](#io-optimization)
   - [Benchmark](#benchmark)
-  - [LSTM Results](#lstm-results)
+    - [Future Work](#future-work)
   - [Project Structure](#project-structure)
   - [Requirements](#requirements)
   - [Build \& Run](#build--run)
@@ -25,32 +28,29 @@ SHA-256-based exact deduplication is available as a second pipeline mode (`--pip
   - [Tests](#tests)
   - [Credits](#credits)
 
-# SignalForge
-
-A GPU-accelerated distributed pipeline for ingesting, deduplicating, and analyzing real-world engine sound recordings. SignalForge uses cuFFT on the GPU for frequency-domain feature extraction and deduplication — two signals that sound the same produce near-identical FFT magnitude arrays, which are used as Redis deduplication keys via xxHash64. A PyTorch LSTM autoencoder consumes the stored FFT features for anomaly detection.
-
-SHA-256-based exact deduplication is available as a second pipeline mode (`--pipeline-sha256`) for comparison or byte-level identity checks.
-
 ---
 
 ## Pipeline Architecture
 
 ![Pipeline Architecture](docs/assets/pipeline.svg)
 
-**Default pipeline (`--pipeline`, FFT-only):**
+**Default pipeline (`--pipeline`, FFT-based deduplication):**
 
 1. **Scanner thread** — reads WAV files from `input_dir` (root and one level of subdirectories)
 2. **Reader threads** — read raw PCM data, batch up to `fft.batch_size` files
 3. **GPU worker** — runs cuFFT on each batch, pushes magnitude arrays to result queue
 4. **Redis writer** — computes xxHash64 of each magnitude array, checks for duplicates, stores new results as `fft_mag:0:<xxhash>` in Redis
 
-**SHA-256 pipeline (`--pipeline-sha256`):**
+**SHA-256 pipeline (`--pipeline-sha256`, industry-standard deduplication):**
 
-Same as above but the GPU worker runs SHA-256 first, filters exact duplicates via `sha256:<hex>` Redis keys, then runs cuFFT on survivors. Results stored as `fft_mag_sha256:0:<xxhash>`.
+1. **Scanner thread** — same as above
+2. **Reader threads** — read raw PCM data, batch up to `sha256.batch_size` files
+3. **GPU worker** — runs SHA-256 on each batch, pushes hashes to result queue
+4. **Redis writer** — checks for duplicates via `sha256:<hex>`, stores new timestamps
 
 **gRPC mode (`--grpc`):**
 
-Scanner is replaced by a gRPC receiver that accepts files from remote clients over the network. Incoming files are written to `input_dir` and processed by the same reader/GPU/writer threads.
+Scanner is replaced by a gRPC receiver that accepts files from remote clients over the network.
 
 ---
 
@@ -70,41 +70,36 @@ Tested on AWS EC2 g4dn.xlarge (Tesla T4, 16GB GPU, Ubuntu 22.04), Docker contain
 
 **C++ pipeline comparison:**
 
-| Pipeline | Total | SHA-256 | FFT | Redis | Throughput |
-|----------|-------|---------|-----|-------|------------|
-| FFT-only (default) | 5.4s | — | 2.5s | 2.2s | ~3,967 files/s |
-| SHA-256 + FFT | 14.1s | 9.5s | 0.6s | 2.4s | ~1,529 files/s |
+| Pipeline | Total | Compute | Waiting | Redis | Throughput |
+|----------|-------|---------|---------|-------|------------|
+| FFT (default) | 5.1s | 2.5s | 0.6s | 2.2s | ~3,925 files/s |
+| SHA-256 | 10.2s | 9.0s | 0.2s | 1.9s | ~1,961 files/s |
 
-Removing SHA-256 and using FFT-based deduplication gives **2.5x throughput improvement** on the same hardware. SHA-256 alone accounts for 68% of total pipeline time.
+FFT-based deduplication gives a **2.0x throughput improvement** over SHA-256 on the same hardware and dataset. SHA-256 compute alone accounts for 88% of its pipeline's total time, while in the FFT pipeline Redis writes are now the largest single component (~43%) — a target for future optimization (see Future Work).
 
 **C++ FFT-only vs Python FFT-only (same hardware):**
 
 | Implementation | Workers | Total | Throughput | vs C++ |
 |----------------|---------|-------|------------|--------|
-| Python (multiprocessing) | 1 | 62.2s | 346 files/s | 11.5x slower |
-| Python (multiprocessing) | 2 | 48.0s | 449 files/s | 8.8x slower |
-| Python (multiprocessing) | 4 | 46.7s | 461 files/s | 8.6x slower |
-| Python (multiprocessing) | 8 | 47.8s | 451 files/s | 8.8x slower |
-| **C++ CUDA (default)** | — | **5.4s** | **3,967 files/s** | **baseline** |
+| Python (multiprocessing) | 2 | 47.5s | 421.9 files/s | 9.3x slower |
+| Python (multiprocessing) | 4 | 44.3s | 451.5 files/s | 8.7x slower |
+| Python (multiprocessing) | 8 | 44.5s | 450.0 files/s | 8.7x slower |
+| **C++ CUDA (default)** | — | **5.1s** | **3,925 files/s** | **baseline** |
 
-Config: `fft.batch_size=8192`, `fft.threads_per_block=256`, `pipeline.reader_threads=4`
+Config: `fft.batch_size=2048`, `sha256.batch_size=1024`, `fft_size=8192`, `reader_threads=4`.
 
----
+**Dataset:** 20,020 synthetic engine sound WAV files across four size groups (100KB, 500KB, 1024KB, 2048KB). Each group contains 5 identical "clean" signals (true duplicates) and 1,000-9,000 unique "anomaly" signals with randomized noise, simulating realistic variation between recordings of the same engine. Generated with `SignalForge_Tools/generate_signals.py` using `generate_signals.json`.
 
-## LSTM Results
 
-LSTM autoencoder trained on 200 clean engine signals, tested on 30 anomaly signals:
+### Future Work
 
-| Signal type | Reconstruction error | Result     |
-|-------------|----------------------|------------|
-| Clean       | ~0.000               | ✓ normal   |
-| Anomaly     | ~0.62–0.68           | ✓ detected |
+**Redis write batching:** In the FFT pipeline, Redis writes account for roughly 45% of total pipeline time (~2.4s of 5.3s for 21,000 files), each write being a separate round trip. Batching writes with Redis pipelining (`MULTI`/`EXEC` or hiredis pipeline mode) could significantly reduce this overhead.
 
-30/30 anomaly files correctly detected. 0 false positives.
+**Larger file sizes:** Initial testing with 2-4MB files showed GPU starvation (high "Waiting" time) at the current batch sizes, indicating the reader/batch configuration needs retuning for larger payloads. This is included in the current benchmark dataset (2048KB group) but further tuning may improve results for even larger files.
 
-Full ML details → [SignalForge_ML/README.md](SignalForge_ML/README.md)
 
 ---
+
 
 ## Project Structure
 
@@ -205,7 +200,7 @@ For detailed commands, Docker profiles, Redis setup, and troubleshooting → [DE
     },
     "kernels": {
         "sha256": { "batch_size": 1024, "threads_per_block": 64 },
-        "fft":    { "batch_size": 8192, "threads_per_block": 256, "fft_size": 8192 }
+        "fft":    { "batch_size": 2048, "threads_per_block": 256, "fft_size": 8192 }
     },
     "pipeline": { "reader_threads": 4 },
     "redis": {
@@ -220,11 +215,10 @@ For detailed commands, Docker profiles, Redis setup, and troubleshooting → [DE
 
 | Key | Value | Written by |
 |-----|-------|------------|
-| `sha256:<hex>` | ISO 8601 timestamp | SHA-256 pipeline GPU thread |
-| `fft_mag:0:<xxhash>` | Raw float magnitudes | FFT-only pipeline writer thread |
-| `fft_mag_sha256:0:<xxhash>` | Raw float magnitudes | SHA-256 pipeline writer thread |
+| `sha256:<hex>` | ISO 8601 timestamp | SHA-256 pipeline writer thread |
+| `fft_mag:0:<xxhash>` | Raw float magnitudes | FFT pipeline writer thread |
 
-The `0` in `fft_mag:0:` and `fft_mag_sha256:0:` indicates the entry has not yet been consumed by the LSTM autoencoder. The autoencoder writes `fft_mag:1:` and `fft_mag_sha256:1:` keys after processing.
+The `0` in `fft_mag:0:` indicates the entry has not yet been consumed by the LSTM autoencoder. The autoencoder writes `fft_mag:1:` keys after processing.
 
 ---
 ## Tests

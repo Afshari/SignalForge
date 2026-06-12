@@ -119,51 +119,10 @@ namespace SignalForge {
 
 	void SignalForgePipeline::RunGpuThreadSha256() {
 
-		RedisClient redis(m_config.redis.host, m_config.redis.port, m_config.redis.db);
-		bool redisAvailable = redis.Connect();
-		if (!redisAvailable)
-			std::cerr << "[GPU] Redis not available - duplicate skipping disabled." << std::endl;
-
 		auto t_run_start = std::chrono::high_resolution_clock::now();
 
-		// timing accumulators
 		double t_sha_ms = 0.0;
-		double t_redis_ms = 0.0;
-		double t_fft_ms = 0.0;
 		double t_wait_ms = 0.0;
-
-		// Accumulator - survivors waiting for FFT
-		std::vector<std::vector<uint8_t>> accum_pcm;
-		size_t skipped = 0;
-		size_t total_processed = 0;
-		std::vector<std::string>          accum_hashes;
-
-		uint32_t half = m_config.fft_size / 2 + 1;
-
-		auto flushFFT = [&]()
-			{
-				if (accum_pcm.empty()) return;
-
-				uint32_t count = static_cast<uint32_t>(accum_pcm.size());
-				std::vector<float> magnitudes((uint64_t)count * half, 0.0f);
-
-				auto t_fft0 = std::chrono::high_resolution_clock::now();
-				FFTBatchWrapper_CPU(accum_pcm, magnitudes.data(), count,
-					m_config.fft_size, m_config.fft.threads_per_block);
-				t_fft_ms += std::chrono::duration<double, std::milli>(
-					std::chrono::high_resolution_clock::now() - t_fft0).count();
-
-				FFTResult result;
-				result.hashes = std::move(accum_hashes);
-				result.magnitudes = std::move(magnitudes);
-				result.count = count;
-				result.half = half;
-
-				m_result_queue.push(std::move(result));
-
-				accum_pcm.clear();
-				accum_hashes.clear();
-			};
 
 		while (true)
 		{
@@ -176,47 +135,25 @@ namespace SignalForge {
 			uint32_t count = static_cast<uint32_t>(batch->pcm_data.size());
 			std::vector<uint64_t> batchHashes(count * 4, 0);
 
-			// Run SHA-256 on entire batch
 			auto t_sha0 = std::chrono::high_resolution_clock::now();
 			SHA256BatchWrapper_CPU(batch->pcm_data, batchHashes.data(), count,
 				m_config.sha256.threads_per_block);
 			t_sha_ms += std::chrono::duration<double, std::milli>(
 				std::chrono::high_resolution_clock::now() - t_sha0).count();
 
-			// Filter duplicates - add survivors to accumulator
+			std::vector<std::string> hashes;
+			hashes.reserve(count);
 			for (uint32_t i = 0; i < count; i++)
-			{
-				std::string hex = Utils::HashToHex(batchHashes.data() + i * 4);
-				total_processed++;
+				hashes.push_back(Utils::HashToHex(batchHashes.data() + i * 4));
 
-				auto t_redis0 = std::chrono::high_resolution_clock::now();
-				if (redisAvailable && redis.HashExists(hex)) {
-					t_redis_ms += std::chrono::duration<double, std::milli>(
-						std::chrono::high_resolution_clock::now() - t_redis0).count();
-					skipped++;
-					continue;
-				}
-				if (redisAvailable)
-					redis.SetHash(hex, Utils::NowISO8601());
-				t_redis_ms += std::chrono::duration<double, std::milli>(
-					std::chrono::high_resolution_clock::now() - t_redis0).count();
-
-				accum_pcm.push_back(std::move(batch->pcm_data[i]));
-				accum_hashes.push_back(std::move(hex));
-
-				// Flush accumulator when FFT batch size is reached
-				if (accum_pcm.size() >= m_config.fft.batch_size)
-					flushFFT();
-			}
+			SHA256Result result;
+			result.hashes = std::move(hashes);
+			result.count = count;
+			m_sha256_result_queue.push(std::move(result));
 		}
 
-		// Flush any remaining survivors
-		flushFFT();
-
-		m_result_queue.close();
-		std::cout << "[GPU] Done. Skipped " << skipped
-			<< " duplicates, sent " << (total_processed - skipped)
-			<< " to FFT." << std::endl;
+		m_sha256_result_queue.close();
+		std::cout << "[GPU] Done." << std::endl;
 
 		if (m_config.verbose)
 		{
@@ -226,8 +163,6 @@ namespace SignalForge {
 			std::cout << std::fixed << std::setprecision(3)
 				<< "[GPU] Total:   " << total_ms / 1000.0 << "s\n"
 				<< "[GPU] SHA-256: " << t_sha_ms / 1000.0 << "s\n"
-				<< "[GPU] FFT:     " << t_fft_ms / 1000.0 << "s\n"
-				<< "[GPU] Redis:   " << t_redis_ms / 1000.0 << "s\n"
 				<< "[GPU] Waiting: " << t_wait_ms / 1000.0 << "s\n"
 				<< std::endl;
 		}
@@ -307,29 +242,18 @@ namespace SignalForge {
 
 		size_t total = 0;
 		size_t skipped = 0;
-		double t_xxhash_ms = 0.0;
 		double t_redis_ms = 0.0;
 
-		while (auto result = m_result_queue.pop())
+		while (auto result = m_sha256_result_queue.pop())
 		{
 			if (!redisAvailable) continue;
 
 			for (uint32_t i = 0; i < result->count; i++)
 			{
-				const float* mag_ptr = result->magnitudes.data() + (uint64_t)i * result->half;
-				size_t mag_bytes = (size_t)result->half * sizeof(float);
-
-				auto t_xx0 = std::chrono::high_resolution_clock::now();
-				uint64_t hash64 = XXH64(mag_ptr, mag_bytes, 0);
-				t_xxhash_ms += std::chrono::duration<double, std::milli>(
-					std::chrono::high_resolution_clock::now() - t_xx0).count();
-
-				std::ostringstream oss;
-				oss << std::hex << std::setw(16) << std::setfill('0') << hash64;
-				std::string xxhash_hex = oss.str();
+				const std::string& hex = result->hashes[i];
 
 				auto t_redis0 = std::chrono::high_resolution_clock::now();
-				if (redis.FftMagSha256Exists(xxhash_hex))
+				if (redis.HashExists(hex))
 				{
 					t_redis_ms += std::chrono::duration<double, std::milli>(
 						std::chrono::high_resolution_clock::now() - t_redis0).count();
@@ -337,7 +261,7 @@ namespace SignalForge {
 					continue;
 				}
 
-				redis.SetFftMagSha256(xxhash_hex, mag_ptr, result->half);
+				redis.SetHash(hex, Utils::NowISO8601());
 				t_redis_ms += std::chrono::duration<double, std::milli>(
 					std::chrono::high_resolution_clock::now() - t_redis0).count();
 				total++;
@@ -345,13 +269,12 @@ namespace SignalForge {
 		}
 
 		std::cout << "[Writer] Done. Stored " << total
-			<< " files, skipped " << skipped << " FFT duplicates." << std::endl;
+			<< " hashes, skipped " << skipped << " duplicates." << std::endl;
 
 		if (m_config.verbose)
 		{
 			std::cout << std::fixed << std::setprecision(3)
-				<< "[Writer] xxHash: " << t_xxhash_ms / 1000.0 << "s\n"
-				<< "[Writer] Redis:  " << t_redis_ms / 1000.0 << "s\n"
+				<< "[Writer] Redis: " << t_redis_ms / 1000.0 << "s\n"
 				<< std::endl;
 		}
 	}

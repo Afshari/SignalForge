@@ -237,31 +237,7 @@ namespace SignalForge {
         EXPECT_GT(found, 0);
     }
 
-    TEST_F(PipelineSha256Test, Pipeline_StoresFftMagSha256InRedis)
-    {
-        auto files = Utils::ScanWavFiles(config.input_dir);
-        std::vector<std::string> filepaths;
-        for (const auto& p : files)
-            filepaths.push_back(p.string());
-
-        SignalForge::SignalForgePipeline pipeline(filepaths, config, true);
-        pipeline.Run();
-
-        int found = 0;
-        uint32_t half = config.fft_size / 2 + 1;
-        for (const auto& p : files)
-        {
-            WavReader reader(p);
-            auto pcm = reader.ReadPCM();
-            auto mags = ComputeMagnitudes(pcm, config);
-            std::string xxhash_hex = MagToXxHash(mags.data(), half);
-            if (client.FftMagSha256Exists(xxhash_hex))
-                found++;
-        }
-        EXPECT_GT(found, 0);
-    }
-
-    TEST_F(PipelineSha256Test, Pipeline_SecondRun_SkipsAllFiles)
+    TEST_F(PipelineSha256Test, Pipeline_SecondRun_SkipsAllHashes)
     {
         auto files = Utils::ScanWavFiles(config.input_dir);
         std::vector<std::string> filepaths;
@@ -272,14 +248,16 @@ namespace SignalForge {
         pipeline1.Run();
 
         int count_before = 0;
-        uint32_t half = config.fft_size / 2 + 1;
         for (const auto& p : files)
         {
             WavReader reader(p);
             auto pcm = reader.ReadPCM();
-            auto mags = ComputeMagnitudes(pcm, config);
-            std::string xxhash_hex = MagToXxHash(mags.data(), half);
-            if (client.FftMagSha256Exists(xxhash_hex))
+            std::vector<std::vector<uint8_t>> inputs = { pcm };
+            std::vector<uint64_t> hash(4, 0);
+            SHA256BatchWrapper_CPU(inputs, hash.data(), 1,
+                config.sha256.threads_per_block);
+            std::string hex = Utils::HashToHex(hash.data());
+            if (client.HashExists(hex))
                 count_before++;
         }
 
@@ -291,87 +269,16 @@ namespace SignalForge {
         {
             WavReader reader(p);
             auto pcm = reader.ReadPCM();
-            auto mags = ComputeMagnitudes(pcm, config);
-            std::string xxhash_hex = MagToXxHash(mags.data(), half);
-            if (client.FftMagSha256Exists(xxhash_hex))
+            std::vector<std::vector<uint8_t>> inputs = { pcm };
+            std::vector<uint64_t> hash(4, 0);
+            SHA256BatchWrapper_CPU(inputs, hash.data(), 1,
+                config.sha256.threads_per_block);
+            std::string hex = Utils::HashToHex(hash.data());
+            if (client.HashExists(hex))
                 count_after++;
         }
 
         EXPECT_EQ(count_before, count_after);
-    }
-
-    // ================================================================================
-    // RedisClientTests - FftMagSha256 operations
-    // Keys are xxHash64 hex strings, prefix fft_mag_sha256:0:
-    // ================================================================================
-
-    class RedisFftMagSha256Test : public ::testing::Test
-    {
-    protected:
-        SignalForge::RedisClient client = TestHelpers::MakeClient();
-
-        void SetUp() override
-        {
-            ASSERT_TRUE(client.Connect());
-            client.FlushAll();
-        }
-
-        void TearDown() override
-        {
-            client.FlushAll();
-            client.Disconnect();
-        }
-    };
-
-    TEST_F(RedisFftMagSha256Test, SetFftMagSha256_AndFftMagSha256Exists_RoundTrip)
-    {
-        std::string xxhash = "a1b2c3d4e5f6a7b8";
-        std::vector<float> mags = { 0.1f, 0.5f, 1.2f, 0.3f, 0.8f };
-
-        EXPECT_FALSE(client.FftMagSha256Exists(xxhash));
-        EXPECT_TRUE(client.SetFftMagSha256(xxhash, mags.data(), mags.size()));
-        EXPECT_TRUE(client.FftMagSha256Exists(xxhash));
-    }
-
-    TEST_F(RedisFftMagSha256Test, FftMagSha256Exists_ReturnsFalseForUnknownHash)
-    {
-        std::string xxhash = "ffffffffffffffff";
-        EXPECT_FALSE(client.FftMagSha256Exists(xxhash));
-    }
-
-    TEST_F(RedisFftMagSha256Test, FftMagSha256_And_FftMag_SameHash_IndependentEntries)
-    {
-        // Verify fft_mag_sha256:0: and fft_mag:0: are independent namespaces
-        std::string xxhash = "a1b2c3d4e5f6a7b8";
-        std::vector<float> mags = { 0.1f, 0.2f, 0.3f };
-
-        client.SetFftMag(xxhash, mags.data(), mags.size());
-        EXPECT_TRUE(client.FftMagExists(xxhash));
-        EXPECT_FALSE(client.FftMagSha256Exists(xxhash));
-
-        client.SetFftMagSha256(xxhash, mags.data(), mags.size());
-        EXPECT_TRUE(client.FftMagExists(xxhash));
-        EXPECT_TRUE(client.FftMagSha256Exists(xxhash));
-    }
-
-    TEST_F(RedisFftMagSha256Test, SetFftMagSha256_LargeArray_ValuesCorrect)
-    {
-        std::string xxhash = "a1b2c3d4e5f6a7b8";
-        uint32_t size = 8192 / 2 + 1;
-        std::vector<float> mags(size);
-        for (uint32_t i = 0; i < size; i++)
-            mags[i] = (float)i * 0.001f;
-
-        EXPECT_TRUE(client.SetFftMagSha256(xxhash, mags.data(), size));
-
-        std::vector<float> out;
-        EXPECT_TRUE(client.GetFftMagSha256(xxhash, out));
-
-        ASSERT_EQ(out.size(), size);
-        float max_diff = 0.0f;
-        for (uint32_t i = 0; i < size; i++)
-            max_diff = std::max(max_diff, std::abs(out[i] - mags[i]));
-        EXPECT_LT(max_diff, 1e-6f);
     }
 
 } // namespace SignalForge

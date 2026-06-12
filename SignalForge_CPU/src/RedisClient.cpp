@@ -235,49 +235,6 @@ namespace SignalForge {
     }
 
     // --------------------------------------------------------------------------------
-    bool RedisClient::SetFftMagSha256(const std::string& xxhash_hex,
-        const float* data, uint32_t size)
-    {
-        if (!IsConnected()) return false;
-        std::string redisKey = "fft_mag_sha256:0:" + xxhash_hex;
-        redisReply* reply = (redisReply*)redisCommand(
-            m_ctx, "SET %s %b", redisKey.c_str(),
-            (const char*)data, (size_t)(size * sizeof(float)));
-        return CheckReply(reply);
-    }
-
-    // --------------------------------------------------------------------------------
-    bool RedisClient::FftMagSha256Exists(const std::string& xxhash_hex)
-    {
-        if (!IsConnected()) return false;
-        std::string redisKey = "fft_mag_sha256:0:" + xxhash_hex;
-        redisReply* reply = (redisReply*)redisCommand(
-            m_ctx, "EXISTS %s", redisKey.c_str());
-        if (!reply) return false;
-        bool exists = reply->integer == 1;
-        freeReplyObject(reply);
-        return exists;
-    }
-
-    // --------------------------------------------------------------------------------
-    bool RedisClient::GetFftMagSha256(const std::string& xxhash_hex, std::vector<float>& out)
-    {
-        if (!IsConnected()) return false;
-        std::string redisKey = "fft_mag_sha256:0:" + xxhash_hex;
-        redisReply* reply = (redisReply*)redisCommand(
-            m_ctx, "GET %s", redisKey.c_str());
-        if (!reply || reply->type == REDIS_REPLY_NIL)
-        {
-            freeReplyObject(reply);
-            return false;
-        }
-        uint32_t count = static_cast<uint32_t>(reply->len / sizeof(float));
-        out.assign((float*)reply->str, (float*)reply->str + count);
-        freeReplyObject(reply);
-        return true;
-    }
-
-    // --------------------------------------------------------------------------------
     void RedisClient::FlushAll()
     {
         if (!IsConnected()) return;

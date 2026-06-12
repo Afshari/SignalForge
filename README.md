@@ -1,19 +1,17 @@
 # SignalForge
 
-A GPU-accelerated distributed pipeline for ingesting, deduplicating, and analyzing real-world engine sound recordings. SignalForge uses cuFFT on the GPU for frequency-domain feature extraction and deduplication — two signals that sound the same produce near-identical FFT magnitude arrays, which are used as Redis deduplication keys via xxHash64. A PyTorch LSTM autoencoder consumes the stored FFT features for anomaly detection.
+A GPU-accelerated distributed pipeline for ingesting and deduplicating real-world engine sound recordings. Two independent pipelines are implemented for comparison: a GPU FFT-based pipeline (default) and a GPU SHA-256 pipeline (`--pipeline-sha256`, the industry-standard approach).
 
-SHA-256-based exact deduplication is available as a second pipeline mode (`--pipeline-sha256`) for comparison or byte-level identity checks.
+A Python multiprocessing baseline implementing the same FFT-based approach was also built for comparison. While the Python version took under an hour to write, the C++/CUDA implementation is **8.6-11.5x faster** on the same hardware — the reason this project exists as a CUDA pipeline rather than a Python script. See [Benchmark](#benchmark) for details.
 
 ---
 
 ## Table of Contents
 - [SignalForge](#signalforge)
   - [Table of Contents](#table-of-contents)
-- [SignalForge](#signalforge-1)
   - [Pipeline Architecture](#pipeline-architecture)
   - [I/O Optimization](#io-optimization)
   - [Benchmark](#benchmark)
-  - [LSTM Results](#lstm-results)
   - [Project Structure](#project-structure)
   - [Requirements](#requirements)
   - [Build \& Run](#build--run)
@@ -25,32 +23,29 @@ SHA-256-based exact deduplication is available as a second pipeline mode (`--pip
   - [Tests](#tests)
   - [Credits](#credits)
 
-# SignalForge
-
-A GPU-accelerated distributed pipeline for ingesting, deduplicating, and analyzing real-world engine sound recordings. SignalForge uses cuFFT on the GPU for frequency-domain feature extraction and deduplication — two signals that sound the same produce near-identical FFT magnitude arrays, which are used as Redis deduplication keys via xxHash64. A PyTorch LSTM autoencoder consumes the stored FFT features for anomaly detection.
-
-SHA-256-based exact deduplication is available as a second pipeline mode (`--pipeline-sha256`) for comparison or byte-level identity checks.
-
 ---
 
 ## Pipeline Architecture
 
 ![Pipeline Architecture](docs/assets/pipeline.svg)
 
-**Default pipeline (`--pipeline`, FFT-only):**
+**Default pipeline (`--pipeline`, FFT-based deduplication):**
 
 1. **Scanner thread** — reads WAV files from `input_dir` (root and one level of subdirectories)
 2. **Reader threads** — read raw PCM data, batch up to `fft.batch_size` files
 3. **GPU worker** — runs cuFFT on each batch, pushes magnitude arrays to result queue
 4. **Redis writer** — computes xxHash64 of each magnitude array, checks for duplicates, stores new results as `fft_mag:0:<xxhash>` in Redis
 
-**SHA-256 pipeline (`--pipeline-sha256`):**
+**SHA-256 pipeline (`--pipeline-sha256`, industry-standard deduplication):**
 
-Same as above but the GPU worker runs SHA-256 first, filters exact duplicates via `sha256:<hex>` Redis keys, then runs cuFFT on survivors. Results stored as `fft_mag_sha256:0:<xxhash>`.
+1. **Scanner thread** — same as above
+2. **Reader threads** — read raw PCM data, batch up to `sha256.batch_size` files
+3. **GPU worker** — runs SHA-256 on each batch, pushes hashes to result queue
+4. **Redis writer** — checks for duplicates via `sha256:<hex>`, stores new timestamps
 
 **gRPC mode (`--grpc`):**
 
-Scanner is replaced by a gRPC receiver that accepts files from remote clients over the network. Incoming files are written to `input_dir` and processed by the same reader/GPU/writer threads.
+Scanner is replaced by a gRPC receiver that accepts files from remote clients over the network.
 
 ---
 
@@ -91,20 +86,6 @@ Config: `fft.batch_size=8192`, `fft.threads_per_block=256`, `pipeline.reader_thr
 
 ---
 
-## LSTM Results
-
-LSTM autoencoder trained on 200 clean engine signals, tested on 30 anomaly signals:
-
-| Signal type | Reconstruction error | Result     |
-|-------------|----------------------|------------|
-| Clean       | ~0.000               | ✓ normal   |
-| Anomaly     | ~0.62–0.68           | ✓ detected |
-
-30/30 anomaly files correctly detected. 0 false positives.
-
-Full ML details → [SignalForge_ML/README.md](SignalForge_ML/README.md)
-
----
 
 ## Project Structure
 
@@ -220,11 +201,10 @@ For detailed commands, Docker profiles, Redis setup, and troubleshooting → [DE
 
 | Key | Value | Written by |
 |-----|-------|------------|
-| `sha256:<hex>` | ISO 8601 timestamp | SHA-256 pipeline GPU thread |
-| `fft_mag:0:<xxhash>` | Raw float magnitudes | FFT-only pipeline writer thread |
-| `fft_mag_sha256:0:<xxhash>` | Raw float magnitudes | SHA-256 pipeline writer thread |
+| `sha256:<hex>` | ISO 8601 timestamp | SHA-256 pipeline writer thread |
+| `fft_mag:0:<xxhash>` | Raw float magnitudes | FFT pipeline writer thread |
 
-The `0` in `fft_mag:0:` and `fft_mag_sha256:0:` indicates the entry has not yet been consumed by the LSTM autoencoder. The autoencoder writes `fft_mag:1:` and `fft_mag_sha256:1:` keys after processing.
+The `0` in `fft_mag:0:` indicates the entry has not yet been consumed by the LSTM autoencoder. The autoencoder writes `fft_mag:1:` keys after processing.
 
 ---
 ## Tests

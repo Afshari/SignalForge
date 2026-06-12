@@ -24,7 +24,7 @@
 #include "gpu/sha256.cuh"
 
 #define SHA256_BLOCK_SIZE 32
-#define NUM_STREAMS 8
+#define NUM_STREAMS 4
 
 typedef struct {
     BYTE data[64];

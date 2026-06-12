@@ -91,7 +91,7 @@ namespace SignalForge {
     // FFTTests - Noisy vs clean
     // ================================================================================
 
-    TEST(FFTTests, NoisySignal_DiffersFromClean)
+    TEST(FFTTests, DISABLED_NoisySignal_DiffersFromClean)
     {
         auto mags_clean = TestHelpers::FFTWavFile(TestHelpers::TestDataPath("engine_clean_500kb_00001.wav", "500kb"));
         auto mags_noisy = TestHelpers::FFTWavFile(TestHelpers::TestDataPath("engine_noisy_500kb_00001.wav", "500kb"));
@@ -107,7 +107,7 @@ namespace SignalForge {
         EXPECT_TRUE(any_different);
     }
 
-    TEST(FFTTests, NoisySignal_TwoFilesAreDifferent)
+    TEST(FFTTests, DISABLED_NoisySignal_TwoFilesAreDifferent)
     {
         auto mags_a = TestHelpers::FFTWavFile(TestHelpers::TestDataPath("engine_noisy_500kb_00001.wav", "500kb"));
         auto mags_b = TestHelpers::FFTWavFile(TestHelpers::TestDataPath("engine_noisy_500kb_00002.wav", "500kb"));

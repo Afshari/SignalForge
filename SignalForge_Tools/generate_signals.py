@@ -6,7 +6,7 @@ import wave
 from pathlib import Path
 
 # SignalForge_Tools - Synthetic engine sound generator
-# Generates .wav files with clean, noisy, or anomaly engine signals
+# Generates .wav files with clean or anomaly engine signals
 # Each worker: generate signal -> write WAV -> compute SHA-256
 
 # Engine fundamental frequency (Hz) - typical car engine at idle
@@ -28,7 +28,7 @@ ANOMALY_SUBHARMONIC_HZ        = 40.0
 ANOMALY_SUBHARMONIC_AMPLITUDE = 0.5
 
 SCRIPT_NAME    = "generate_signals.py"
-SCRIPT_DESC    = "Synthetic engine sound generator: generates clean, noisy, and anomaly .wav files for SignalForge benchmarking"
+SCRIPT_DESC    = "Synthetic engine sound generator: generates clean and anomaly .wav files for SignalForge benchmarking"
 DEFAULT_PARAMS = "generate_signals.json"
 
 PARAMS_TEMPLATE = {
@@ -36,7 +36,7 @@ PARAMS_TEMPLATE = {
     "sample_rate": "Audio sample rate in Hz (default: 44100)",
     "signals": [
         {
-            "type":    "Signal type: 'clean', 'noisy', or 'anomaly'",
+            "type":    "Signal type: 'clean' or 'anomaly'",
             "size_kb": "Target file size in KB",
             "count":   "Number of files to generate",
             "subdir":  "Optional subdirectory under output_dir (e.g. '500kb')",
@@ -50,8 +50,6 @@ PARAMS_EXAMPLE = {
     "signals": [
         {"type": "clean",   "size_kb": 500,  "count": 2, "subdir": "500kb"},
         {"type": "clean",   "size_kb": 1024, "count": 2, "subdir": "1024kb"},
-        {"type": "noisy",   "size_kb": 500,  "count": 2, "subdir": "500kb"},
-        {"type": "noisy",   "size_kb": 1024, "count": 2, "subdir": "1024kb"},
         {"type": "anomaly", "size_kb": 500,  "count": 2, "subdir": "500kb"},
         {"type": "anomaly", "size_kb": 1024, "count": 2, "subdir": "1024kb"},
     ]
@@ -101,17 +99,6 @@ def generate_clean_signal(num_samples: int, sample_rate: int) -> np.ndarray:
         signal /= max_val
     return signal
 
-
-# --------------------------------------------------------------------------------
-def generate_noisy_signal(num_samples: int, sample_rate: int) -> np.ndarray:
-    signal  = generate_clean_signal(num_samples, sample_rate)
-    signal += np.random.normal(0, 0.08, num_samples)
-    max_val = np.max(np.abs(signal))
-    if max_val > 0:
-        signal /= max_val
-    return signal
-
-
 # --------------------------------------------------------------------------------
 def generate_anomaly_signal(num_samples: int, sample_rate: int) -> np.ndarray:
     signal  = generate_clean_signal(num_samples, sample_rate)
@@ -127,7 +114,6 @@ def generate_anomaly_signal(num_samples: int, sample_rate: int) -> np.ndarray:
 
 GENERATORS = {
     "clean":   generate_clean_signal,
-    "noisy":   generate_noisy_signal,
     "anomaly": generate_anomaly_signal,
 }
 

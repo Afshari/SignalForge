@@ -45,10 +45,19 @@ A GPU-accelerated distributed signal processing pipeline built with CUDA, cuFFT,
 ![Pipeline Architecture](assets/pipeline.svg)
 
 ### Pipeline stages
+
+**FFT pipeline (default):**
 - **Scanner** — reads file paths from `input_dir` (root and one level of subdirectories)
 - **Reader** — reads WAV files into memory, batches PCM data up to `fft.batch_size`
-- **GPU worker** — runs cuFFT on each batch (FFT-only pipeline) or SHA-256 + cuFFT (SHA-256 pipeline)
-- **Redis writer** — computes xxHash64 of magnitude arrays, deduplicates, stores results
+- **GPU worker** — runs cuFFT on each batch, pushes magnitude arrays to result queue
+- **Redis writer** — computes xxHash64 of magnitude arrays, deduplicates, stores as `fft_mag:0:<xxhash>`
+
+**SHA-256 pipeline (`--pipeline-sha256`):**
+- **Scanner** — same as above
+- **Reader** — batches PCM data up to `sha256.batch_size`
+- **GPU worker** — runs SHA-256 on each batch, pushes hashes to result queue
+- **Redis writer** — deduplicates and stores as `sha256:<hex>`
+  
 
 ### Signal types
 - **Clean** -- engine fundamental (80Hz) + harmonics, deterministic (same content = same SHA-256)
@@ -222,24 +231,19 @@ redis-cli -h redis
 
 ### Inspect data
 
-List FFT-only pipeline magnitudes in production database:
+List FFT pipeline magnitudes not yet consumed by the autoencoder:
 ```bash
 redis-cli -h redis -n 0 KEYS "fft_mag:0:*"
 ```
 
-List SHA-256 pipeline magnitudes in production database:
-```bash
-redis-cli -h redis -n 0 KEYS "fft_mag_sha256:0:*"
-```
-
-List unconsumed magnitudes (not yet processed by autoencoder):
-```bash
-redis-cli -h redis -n 0 KEYS "fft_mag:0:*" 
-```
-
-List consumed magnitudes (processed by autoencoder):
+List FFT pipeline magnitudes consumed by the autoencoder:
 ```bash
 redis-cli -h redis -n 0 KEYS "fft_mag:1:*"
+```
+
+List SHA-256 pipeline hashes in production database:
+```bash
+redis-cli -h redis -n 0 KEYS "sha256:*"
 ```
 
 ### Redis databases

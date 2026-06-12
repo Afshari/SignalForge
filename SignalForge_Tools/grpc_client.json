@@ -9,7 +9,6 @@
     },
     "batch": {
         "clean": 4,
-        "noisy": 3,
         "anomaly": 3
     }
 }

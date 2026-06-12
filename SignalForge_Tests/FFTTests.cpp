@@ -88,42 +88,6 @@ namespace SignalForge {
     }
 
     // ================================================================================
-    // FFTTests - Noisy vs clean
-    // ================================================================================
-
-    TEST(FFTTests, NoisySignal_DiffersFromClean)
-    {
-        auto mags_clean = TestHelpers::FFTWavFile(TestHelpers::TestDataPath("engine_clean_500kb_00001.wav", "500kb"));
-        auto mags_noisy = TestHelpers::FFTWavFile(TestHelpers::TestDataPath("engine_noisy_500kb_00001.wav", "500kb"));
-        ASSERT_EQ(mags_clean.size(), mags_noisy.size());
-
-        bool any_different = false;
-        for (size_t i = 0; i < mags_clean.size(); i++)
-            if (std::abs(mags_clean[i] - mags_noisy[i]) > 1e-6f)
-            {
-                any_different = true; break;
-            }
-
-        EXPECT_TRUE(any_different);
-    }
-
-    TEST(FFTTests, NoisySignal_TwoFilesAreDifferent)
-    {
-        auto mags_a = TestHelpers::FFTWavFile(TestHelpers::TestDataPath("engine_noisy_500kb_00001.wav", "500kb"));
-        auto mags_b = TestHelpers::FFTWavFile(TestHelpers::TestDataPath("engine_noisy_500kb_00002.wav", "500kb"));
-        ASSERT_EQ(mags_a.size(), mags_b.size());
-
-        bool any_different = false;
-        for (size_t i = 0; i < mags_a.size(); i++)
-            if (std::abs(mags_a[i] - mags_b[i]) > 1e-6f)
-            {
-                any_different = true; break;
-            }
-
-        EXPECT_TRUE(any_different);
-    }
-
-    // ================================================================================
     // FFTTests - Anomaly signal
     // ================================================================================
 

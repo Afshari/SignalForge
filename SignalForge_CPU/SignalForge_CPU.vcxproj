@@ -34,6 +34,7 @@
     <ClInclude Include="inc\FFTResult.h" />
     <ClInclude Include="inc\GrpcReceiverThread.h" />
     <ClInclude Include="inc\RedisClient.h" />
+    <ClInclude Include="inc\SHA256Result.h" />
     <ClInclude Include="inc\SignalForgePipeline.h" />
     <ClInclude Include="inc\ThreadSafeQueue.h" />
     <ClInclude Include="inc\Utils.h" />

@@ -14,7 +14,7 @@
             "threads_per_block": 64
         },
         "fft": {
-            "batch_size": 8192,
+            "batch_size": 2048,
             "threads_per_block": 256,
             "fft_size": 8192
         }

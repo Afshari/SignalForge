@@ -4,8 +4,6 @@
     "signals": [
         {"type": "clean",   "size_kb": 500,  "count": 2, "subdir": "500kb"},
         {"type": "clean",   "size_kb": 1024, "count": 2, "subdir": "1024kb"},
-        {"type": "noisy",   "size_kb": 500,  "count": 2, "subdir": "500kb"},
-        {"type": "noisy",   "size_kb": 1024, "count": 2, "subdir": "1024kb"},
         {"type": "anomaly", "size_kb": 500,  "count": 2, "subdir": "500kb"},
         {"type": "anomaly", "size_kb": 1024, "count": 2, "subdir": "1024kb"}
     ]

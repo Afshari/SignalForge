@@ -12,7 +12,6 @@ import numpy as np
 sys.path.insert(0, str(Path(__file__).parent))
 from generate_signals import (
     generate_clean_signal,
-    generate_noisy_signal,
     generate_anomaly_signal,
     signal_to_pcm16,
     compute_num_samples,
@@ -37,7 +36,6 @@ PARAMS_TEMPLATE = {
     },
     "batch": {
         "clean":   "Number of clean engine signal files to send",
-        "noisy":   "Number of noisy engine signal files to send",
         "anomaly": "Number of anomaly engine signal files to send",
     }
 }
@@ -53,7 +51,6 @@ PARAMS_EXAMPLE = {
     },
     "batch": {
         "clean":   4,
-        "noisy":   3,
         "anomaly": 3
     }
 }
@@ -71,7 +68,6 @@ def print_list_params():
     print(f"  signal.size_kb  {PARAMS_TEMPLATE['signal']['size_kb']}")
     print(f"  signal.sample_rate  {PARAMS_TEMPLATE['signal']['sample_rate']}")
     print(f"  batch.clean     {PARAMS_TEMPLATE['batch']['clean']}")
-    print(f"  batch.noisy     {PARAMS_TEMPLATE['batch']['noisy']}")
     print(f"  batch.anomaly   {PARAMS_TEMPLATE['batch']['anomaly']}")
 
     print("\nExample grpc_client.json:")
@@ -170,7 +166,6 @@ def main():
 
     generators = {
         "clean":   generate_clean_signal,
-        "noisy":   generate_noisy_signal,
         "anomaly": generate_anomaly_signal,
     }
 

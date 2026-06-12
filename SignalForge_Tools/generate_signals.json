@@ -1,10 +1,14 @@
 {
-    "output_dir": "../SignalForge_Tests/test_data",
+    "output_dir": "/home/ubuntu/signalforge_input/",
     "sample_rate": 44100,
     "signals": [
-        {"type": "clean",   "size_kb": 500,  "count": 2, "subdir": "500kb"},
-        {"type": "clean",   "size_kb": 1024, "count": 2, "subdir": "1024kb"},
-        {"type": "anomaly", "size_kb": 500,  "count": 2, "subdir": "500kb"},
-        {"type": "anomaly", "size_kb": 1024, "count": 2, "subdir": "1024kb"}
+        {"type": "clean",   "size_kb": 100,  "count": 5, "subdir": "100kb"},
+        {"type": "anomaly", "size_kb": 100,  "count": 9000, "subdir": "100kb"},
+        {"type": "clean",   "size_kb": 500,  "count": 5, "subdir": "500kb"},
+        {"type": "anomaly", "size_kb": 500,  "count": 9000, "subdir": "500kb"},
+        {"type": "clean",   "size_kb": 1024, "count": 5,  "subdir": "1024kb"},
+        {"type": "anomaly", "size_kb": 1024, "count": 1000,  "subdir": "1024kb"},
+        {"type": "clean",   "size_kb": 2048, "count": 5,  "subdir": "2048kb"},
+        {"type": "anomaly", "size_kb": 2048, "count": 1000,  "subdir": "2048kb"}
     ]
 }

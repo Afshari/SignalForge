@@ -2,7 +2,9 @@
 
 A GPU-accelerated distributed pipeline for ingesting and deduplicating real-world engine sound recordings. Two independent pipelines are implemented for comparison: a GPU FFT-based pipeline (default) and a GPU SHA-256 pipeline (`--pipeline-sha256`, the industry-standard approach).
 
-A Python multiprocessing baseline implementing the same FFT-based approach was also built for comparison. While the Python version took under an hour to write, the C++/CUDA implementation is **8.6-11.5x faster** on the same hardware — the reason this project exists as a CUDA pipeline rather than a Python script. See [Benchmark](#benchmark) for details.
+A Python multiprocessing baseline implementing the same FFT-based approach was also built for comparison. While the Python version took under an hour to write, the C++/CUDA implementation is **8.7x faster** on the same hardware — the reason this project exists as a CUDA pipeline rather than a Python script. See [Benchmark](#benchmark) for details.
+
+![Approach comparison](docs/assets/approach_comparison.svg)
 
 ---
 
@@ -12,6 +14,7 @@ A Python multiprocessing baseline implementing the same FFT-based approach was a
   - [Pipeline Architecture](#pipeline-architecture)
   - [I/O Optimization](#io-optimization)
   - [Benchmark](#benchmark)
+    - [Future Work](#future-work)
   - [Project Structure](#project-structure)
   - [Requirements](#requirements)
   - [Build \& Run](#build--run)
@@ -65,24 +68,33 @@ Tested on AWS EC2 g4dn.xlarge (Tesla T4, 16GB GPU, Ubuntu 22.04), Docker contain
 
 **C++ pipeline comparison:**
 
-| Pipeline | Total | SHA-256 | FFT | Redis | Throughput |
-|----------|-------|---------|-----|-------|------------|
-| FFT-only (default) | 5.4s | — | 2.5s | 2.2s | ~3,967 files/s |
-| SHA-256 + FFT | 14.1s | 9.5s | 0.6s | 2.4s | ~1,529 files/s |
+| Pipeline | Total | Compute | Waiting | Redis | Throughput |
+|----------|-------|---------|---------|-------|------------|
+| FFT (default) | 5.1s | 2.5s | 0.6s | 2.2s | ~3,925 files/s |
+| SHA-256 | 10.2s | 9.0s | 0.2s | 1.9s | ~1,961 files/s |
 
-Removing SHA-256 and using FFT-based deduplication gives **2.5x throughput improvement** on the same hardware. SHA-256 alone accounts for 68% of total pipeline time.
+FFT-based deduplication gives a **2.0x throughput improvement** over SHA-256 on the same hardware and dataset. SHA-256 compute alone accounts for 88% of its pipeline's total time, while in the FFT pipeline Redis writes are now the largest single component (~43%) — a target for future optimization (see Future Work).
 
 **C++ FFT-only vs Python FFT-only (same hardware):**
 
 | Implementation | Workers | Total | Throughput | vs C++ |
 |----------------|---------|-------|------------|--------|
-| Python (multiprocessing) | 1 | 62.2s | 346 files/s | 11.5x slower |
-| Python (multiprocessing) | 2 | 48.0s | 449 files/s | 8.8x slower |
-| Python (multiprocessing) | 4 | 46.7s | 461 files/s | 8.6x slower |
-| Python (multiprocessing) | 8 | 47.8s | 451 files/s | 8.8x slower |
-| **C++ CUDA (default)** | — | **5.4s** | **3,967 files/s** | **baseline** |
+| Python (multiprocessing) | 2 | 47.5s | 421.9 files/s | 9.3x slower |
+| Python (multiprocessing) | 4 | 44.3s | 451.5 files/s | 8.7x slower |
+| Python (multiprocessing) | 8 | 44.5s | 450.0 files/s | 8.7x slower |
+| **C++ CUDA (default)** | — | **5.1s** | **3,925 files/s** | **baseline** |
 
-Config: `fft.batch_size=8192`, `fft.threads_per_block=256`, `pipeline.reader_threads=4`
+Config: `fft.batch_size=2048`, `sha256.batch_size=1024`, `fft_size=8192`, `reader_threads=4`.
+
+**Dataset:** 20,020 synthetic engine sound WAV files across four size groups (100KB, 500KB, 1024KB, 2048KB). Each group contains 5 identical "clean" signals (true duplicates) and 1,000-9,000 unique "anomaly" signals with randomized noise, simulating realistic variation between recordings of the same engine. Generated with `SignalForge_Tools/generate_signals.py` using `generate_signals.json`.
+
+
+### Future Work
+
+**Redis write batching:** In the FFT pipeline, Redis writes account for roughly 45% of total pipeline time (~2.4s of 5.3s for 21,000 files), each write being a separate round trip. Batching writes with Redis pipelining (`MULTI`/`EXEC` or hiredis pipeline mode) could significantly reduce this overhead.
+
+**Larger file sizes:** Initial testing with 2-4MB files showed GPU starvation (high "Waiting" time) at the current batch sizes, indicating the reader/batch configuration needs retuning for larger payloads. This is included in the current benchmark dataset (2048KB group) but further tuning may improve results for even larger files.
+
 
 ---
 
@@ -186,7 +198,7 @@ For detailed commands, Docker profiles, Redis setup, and troubleshooting → [DE
     },
     "kernels": {
         "sha256": { "batch_size": 1024, "threads_per_block": 64 },
-        "fft":    { "batch_size": 8192, "threads_per_block": 256, "fft_size": 8192 }
+        "fft":    { "batch_size": 2048, "threads_per_block": 256, "fft_size": 8192 }
     },
     "pipeline": { "reader_threads": 4 },
     "redis": {

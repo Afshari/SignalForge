@@ -217,21 +217,4 @@ namespace SignalForge {
         EXPECT_GT(pcm.size(), 490u * 1024u);
         EXPECT_LT(pcm.size(), 510u * 1024u);
     }
-
-    TEST(WavReaderTests, DISABLED_ReadGeneratedFile_Noisy_1024kb)
-    {
-        auto path = TestHelpers::TestDataPath("engine_noisy_1024kb_00001.wav", "1024kb");
-
-        SignalForge::WavReader reader(path);
-
-        EXPECT_EQ(reader.GetSampleRate(), 44100u);
-        EXPECT_EQ(reader.GetNumChannels(), 1u);
-        EXPECT_EQ(reader.GetBitDepth(), 16u);
-
-        auto pcm = reader.ReadPCM();
-
-        EXPECT_GT(pcm.size(), 1010u * 1024u);
-        EXPECT_LT(pcm.size(), 1040u * 1024u);
-    }
-
 } // namespace SignalForge

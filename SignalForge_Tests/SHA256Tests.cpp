@@ -130,40 +130,6 @@ namespace SignalForge {
         EXPECT_EQ(h_hash_a[3], h_hash_b[3]);
     }
 
-    // --- Noisy signals (random noise, each file must produce a different hash) ---
-    TEST(SHA256Tests, DISABLED_NoisySignal_500kb_KnownHash)
-    {
-        uint64_t h_hash[4] = { 0, 0, 0, 0 };
-        TestHelpers::HashWavFile(TestHelpers::TestDataPath("engine_noisy_500kb_00001.wav", "500kb"), h_hash);
-        EXPECT_EQ(h_hash[0], 0x13917B9BF9CCF535ULL);
-        EXPECT_EQ(h_hash[1], 0xC2DCB4E072507C34ULL);
-        EXPECT_EQ(h_hash[2], 0xBE6C528D6629AE18ULL);
-        EXPECT_EQ(h_hash[3], 0xF678991B9CCFE495ULL);
-    }
-
-    TEST(SHA256Tests, DISABLED_NoisySignal_500kb_FilesAreDifferent)
-    {
-        uint64_t h_hash_a[4] = { 0, 0, 0, 0 };
-        uint64_t h_hash_b[4] = { 0, 0, 0, 0 };
-        TestHelpers::HashWavFile(TestHelpers::TestDataPath("engine_noisy_500kb_00001.wav", "500kb"), h_hash_a);
-        TestHelpers::HashWavFile(TestHelpers::TestDataPath("engine_noisy_500kb_00002.wav", "500kb"), h_hash_b);
-
-        bool different =
-            h_hash_a[0] != h_hash_b[0] || h_hash_a[1] != h_hash_b[1] ||
-            h_hash_a[2] != h_hash_b[2] || h_hash_a[3] != h_hash_b[3];
-        EXPECT_TRUE(different);
-    }
-
-    TEST(SHA256Tests, DISABLED_NoisySignal_1024kb_KnownHash)
-    {
-        uint64_t h_hash[4] = { 0, 0, 0, 0 };
-        TestHelpers::HashWavFile(TestHelpers::TestDataPath("engine_noisy_1024kb_00001.wav", "1024kb"), h_hash);
-        EXPECT_EQ(h_hash[0], 0x49E217F8AFB34E1AULL);
-        EXPECT_EQ(h_hash[1], 0x1AD9C817E2335A35ULL);
-        EXPECT_EQ(h_hash[2], 0xC0F5AEDB9FE4D4D8ULL);
-        EXPECT_EQ(h_hash[3], 0x33DD4C580C1F0FF4ULL);
-    }
-
     // --- Anomaly signals ---
     TEST(SHA256Tests, AnomalySignal_500kb_KnownHash)
     {
@@ -184,21 +150,6 @@ namespace SignalForge {
         EXPECT_EQ(h_hash[2], 0x0564C5EB9936121FULL);
         EXPECT_EQ(h_hash[3], 0x4B199398AE49C9C4ULL);
     }
-
-    // --- Cross-type: clean vs noisy must never match ---
-    TEST(SHA256Tests, DISABLED_CleanAndNoisy_500kb_HashesAreDifferent)
-    {
-        uint64_t h_clean[4] = { 0, 0, 0, 0 };
-        uint64_t h_noisy[4] = { 0, 0, 0, 0 };
-        TestHelpers::HashWavFile(TestHelpers::TestDataPath("engine_clean_500kb_00001.wav", "500kb"), h_clean);
-        TestHelpers::HashWavFile(TestHelpers::TestDataPath("engine_noisy_500kb_00001.wav", "500kb"), h_noisy);
-
-        bool different =
-            h_clean[0] != h_noisy[0] || h_clean[1] != h_noisy[1] ||
-            h_clean[2] != h_noisy[2] || h_clean[3] != h_noisy[3];
-        EXPECT_TRUE(different);
-    }
-
     // ================================================================================
     // SHA256Tests - Batch hashing
     // ================================================================================

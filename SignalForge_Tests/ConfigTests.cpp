@@ -35,7 +35,6 @@ namespace SignalForge {
 	{
 		auto config = SignalForge::Config::Load(TestHelpers::ConfigPath());
 
-		EXPECT_EQ(config.max_file_size_kb, 2048u);
 		EXPECT_EQ(config.sample_rate, 44100u);
 		EXPECT_EQ(config.sha256.batch_size, 1024u);
 		EXPECT_EQ(config.sha256.threads_per_block, 64u);
@@ -77,7 +76,6 @@ namespace SignalForge {
 	{
 		auto config = SignalForge::Config::Default();
 
-		EXPECT_EQ(config.max_file_size_kb, 2048u);
 		EXPECT_EQ(config.sample_rate, 44100u);
 		EXPECT_EQ(config.sha256.batch_size, 1024u);
 		EXPECT_EQ(config.sha256.threads_per_block, 64u);
@@ -102,14 +100,6 @@ namespace SignalForge {
 		EXPECT_GT(config.fft_size, 0u);
 		EXPECT_EQ(config.fft_size & (config.fft_size - 1), 0u);
 	}
-
-	TEST(ConfigTests, DefaultConfig_MaxFileSizeKb_WithinExpectedRange)
-	{
-		auto config = SignalForge::Config::Default();
-		EXPECT_GE(config.max_file_size_kb, 500u);
-		EXPECT_LE(config.max_file_size_kb, 2048u);
-	}
-
 	// ================================================================================
 	// Load matches Default
 	// ================================================================================
@@ -118,7 +108,6 @@ namespace SignalForge {
 		auto loaded = SignalForge::Config::Load(TestHelpers::ConfigPath());
 		auto def = SignalForge::Config::Default();
 
-		EXPECT_EQ(loaded.max_file_size_kb, def.max_file_size_kb);
 		EXPECT_EQ(loaded.sample_rate, def.sample_rate);
 		EXPECT_EQ(loaded.sha256.batch_size, def.sha256.batch_size);
 		EXPECT_EQ(loaded.sha256.threads_per_block, def.sha256.threads_per_block);

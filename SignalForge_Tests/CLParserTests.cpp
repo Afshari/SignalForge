@@ -27,7 +27,7 @@ namespace SignalForge {
         {
             std::ofstream f(temp_dir / "config.json");
             f << "{\n"
-                << "  \"file\": { \"max_file_size_kb\": 2048, \"sample_rate\": 44100 },\n"
+                << "  \"file\": { \"sample_rate\": 44100 },\n"
                 << "  \"kernels\": {\n"
                 << "    \"sha256\": { \"batch_size\": 1024, \"threads_per_block\": 64 },\n"
                 << "    \"fft\":    { \"batch_size\": 4096, \"threads_per_block\": 256, \"fft_size\": 8192 }\n"
@@ -143,7 +143,6 @@ namespace SignalForge {
         CreateConfig();
         auto config = SignalForge::CLParser::LoadConfig(temp_dir);
 
-        EXPECT_EQ(config.max_file_size_kb, 2048u);
         EXPECT_EQ(config.sample_rate, 44100u);
         EXPECT_EQ(config.sha256.batch_size, 1024u);
         EXPECT_EQ(config.sha256.threads_per_block, 64u);

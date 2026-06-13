@@ -21,7 +21,6 @@ namespace SignalForge {
     struct Config
     {
         // File settings
-        uint64_t                max_file_size_kb;
         uint32_t                sample_rate;
 
         // Per-kernel settings

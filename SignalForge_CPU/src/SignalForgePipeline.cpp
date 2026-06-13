@@ -241,35 +241,29 @@ namespace SignalForge {
 			std::cerr << "[Writer] Redis not available - results won't be stored." << std::endl;
 
 		size_t total = 0;
-		size_t skipped = 0;
 		double t_redis_ms = 0.0;
 
 		while (auto result = m_sha256_result_queue.pop())
 		{
 			if (!redisAvailable) continue;
 
+			std::string timestamp = Utils::NowISO8601();
+
+			auto t_redis0 = std::chrono::high_resolution_clock::now();
+
 			for (uint32_t i = 0; i < result->count; i++)
-			{
-				const std::string& hex = result->hashes[i];
+				redis.AppendSetHash(result->hashes[i], timestamp);
 
-				auto t_redis0 = std::chrono::high_resolution_clock::now();
-				if (redis.HashExists(hex))
-				{
-					t_redis_ms += std::chrono::duration<double, std::milli>(
-						std::chrono::high_resolution_clock::now() - t_redis0).count();
-					skipped++;
-					continue;
-				}
+			for (uint32_t i = 0; i < result->count; i++)
+				redis.ReadSetHashReply();
 
-				redis.SetHash(hex, Utils::NowISO8601());
-				t_redis_ms += std::chrono::duration<double, std::milli>(
-					std::chrono::high_resolution_clock::now() - t_redis0).count();
-				total++;
-			}
+			t_redis_ms += std::chrono::duration<double, std::milli>(
+				std::chrono::high_resolution_clock::now() - t_redis0).count();
+
+			total += result->count;
 		}
 
-		std::cout << "[Writer] Done. Stored " << total
-			<< " hashes, skipped " << skipped << " duplicates." << std::endl;
+		std::cout << "[Writer] Done. Processed " << total << " hashes." << std::endl;
 
 		if (m_config.verbose)
 		{
@@ -287,7 +281,6 @@ namespace SignalForge {
 			std::cerr << "[Writer] Redis not available - results won't be stored." << std::endl;
 
 		size_t total = 0;
-		size_t skipped = 0;
 		double t_xxhash_ms = 0.0;
 		double t_redis_ms = 0.0;
 
@@ -295,41 +288,44 @@ namespace SignalForge {
 		{
 			if (!redisAvailable) continue;
 
-			for (uint32_t i = 0; i < result->count; i++)
+			uint32_t count = result->count;
+			std::vector<std::string> xxhashes(count);
+
+			// compute xxHash64 for each magnitude array
+			auto t_xx0 = std::chrono::high_resolution_clock::now();
+			for (uint32_t i = 0; i < count; i++)
 			{
 				const float* mag_ptr = result->magnitudes.data() + (uint64_t)i * result->half;
 				size_t mag_bytes = (size_t)result->half * sizeof(float);
 
-				// compute xxHash64 of magnitude array
-				auto t_xx0 = std::chrono::high_resolution_clock::now();
 				uint64_t hash64 = XXH64(mag_ptr, mag_bytes, 0);
-				t_xxhash_ms += std::chrono::duration<double, std::milli>(
-					std::chrono::high_resolution_clock::now() - t_xx0).count();
-
-				// format as 16-char hex string
 				std::ostringstream oss;
 				oss << std::hex << std::setw(16) << std::setfill('0') << hash64;
-				std::string xxhash_hex = oss.str();
-
-				// check for duplicate FFT result
-				auto t_redis0 = std::chrono::high_resolution_clock::now();
-				if (redis.FftMagExists(xxhash_hex))
-				{
-					t_redis_ms += std::chrono::duration<double, std::milli>(
-						std::chrono::high_resolution_clock::now() - t_redis0).count();
-					skipped++;
-					continue;
-				}
-
-				redis.SetFftMag(xxhash_hex, mag_ptr, result->half);
-				t_redis_ms += std::chrono::duration<double, std::milli>(
-					std::chrono::high_resolution_clock::now() - t_redis0).count();
-				total++;
+				xxhashes[i] = oss.str();
 			}
+			t_xxhash_ms += std::chrono::duration<double, std::milli>(
+				std::chrono::high_resolution_clock::now() - t_xx0).count();
+
+			// Pipeline SET for every file - no existence check needed.
+			// Duplicates simply overwrite the same key with equivalent data.
+			auto t_redis0 = std::chrono::high_resolution_clock::now();
+
+			for (uint32_t i = 0; i < count; i++)
+			{
+				const float* mag_ptr = result->magnitudes.data() + (uint64_t)i * result->half;
+				redis.AppendSetFftMag(xxhashes[i], mag_ptr, result->half);
+			}
+
+			for (uint32_t i = 0; i < count; i++)
+				redis.ReadSetReply();
+
+			t_redis_ms += std::chrono::duration<double, std::milli>(
+				std::chrono::high_resolution_clock::now() - t_redis0).count();
+
+			total += count;
 		}
 
-		std::cout << "[Writer] Done. Stored " << total
-			<< " files, skipped " << skipped << " FFT duplicates." << std::endl;
+		std::cout << "[Writer] Done. Processed " << total << " files." << std::endl;
 
 		if (m_config.verbose)
 		{

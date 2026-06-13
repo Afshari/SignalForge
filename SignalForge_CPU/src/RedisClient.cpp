@@ -235,6 +235,56 @@ namespace SignalForge {
     }
 
     // --------------------------------------------------------------------------------
+    void RedisClient::AppendFftMagExists(const std::string& xxhash_hex)
+    {
+        std::string redisKey = "fft_mag:0:" + xxhash_hex;
+        redisAppendCommand(m_ctx, "EXISTS %s", redisKey.c_str());
+    }
+
+    // --------------------------------------------------------------------------------
+    bool RedisClient::ReadExistsReply()
+    {
+        redisReply* reply = nullptr;
+        redisGetReply(m_ctx, (void**)&reply);
+        if (!reply) return false;
+        bool exists = reply->integer == 1;
+        freeReplyObject(reply);
+        return exists;
+    }
+
+    // --------------------------------------------------------------------------------
+    void RedisClient::AppendSetFftMag(const std::string& xxhash_hex,
+        const float* data, uint32_t size)
+    {
+        std::string redisKey = "fft_mag:0:" + xxhash_hex;
+        redisAppendCommand(m_ctx, "SET %s %b", redisKey.c_str(),
+            (const char*)data, (size_t)(size * sizeof(float)));
+    }
+
+    // --------------------------------------------------------------------------------
+    void RedisClient::ReadSetReply()
+    {
+        redisReply* reply = nullptr;
+        redisGetReply(m_ctx, (void**)&reply);
+        if (reply) freeReplyObject(reply);
+    }
+
+    // --------------------------------------------------------------------------------
+    void RedisClient::AppendSetHash(const std::string& hash, const std::string& timestamp)
+    {
+        std::string redisKey = "sha256:" + hash;
+        redisAppendCommand(m_ctx, "SET %s %s", redisKey.c_str(), timestamp.c_str());
+    }
+
+    // --------------------------------------------------------------------------------
+    void RedisClient::ReadSetHashReply()
+    {
+        redisReply* reply = nullptr;
+        redisGetReply(m_ctx, (void**)&reply);
+        if (reply) freeReplyObject(reply);
+    }
+
+    // --------------------------------------------------------------------------------
     void RedisClient::FlushAll()
     {
         if (!IsConnected()) return;

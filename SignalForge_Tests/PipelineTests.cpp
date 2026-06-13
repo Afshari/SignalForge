@@ -10,6 +10,7 @@
 #include <fstream>
 #include <vector>
 #include <xxhash.h>
+#include <set>
 
 namespace SignalForge {
 
@@ -281,4 +282,32 @@ namespace SignalForge {
         EXPECT_EQ(count_before, count_after);
     }
 
+    TEST_F(PipelineTest, Pipeline_MixedDuplicatesAndUniques_InSameBatch)
+    {
+        auto files = Utils::ScanWavFiles(config.input_dir);
+        std::vector<std::string> filepaths;
+        for (const auto& p : files)
+            filepaths.push_back(p.string());
+
+        SignalForge::SignalForgePipeline pipeline(filepaths, config);
+        pipeline.Run();
+
+        // Every file's xxHash should exist in Redis, whether unique or duplicate
+        uint32_t half = config.fft_size / 2 + 1;
+        std::set<std::string> seen_hashes;
+
+        for (const auto& p : files)
+        {
+            WavReader reader(p);
+            auto pcm = reader.ReadPCM();
+            auto mags = ComputeMagnitudes(pcm, config);
+            std::string xxhash_hex = MagToXxHash(mags.data(), half);
+
+            EXPECT_TRUE(client.FftMagExists(xxhash_hex));
+            seen_hashes.insert(xxhash_hex);
+        }
+
+        // Confirm there ARE duplicates in this dataset (clean files collapse)
+        EXPECT_LT(seen_hashes.size(), files.size());
+    }
 } // namespace SignalForge

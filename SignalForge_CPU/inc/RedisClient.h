@@ -39,6 +39,18 @@ namespace SignalForge {
         bool GetFftMag(const std::string& xxhash_hex, std::vector<float>& out);
         bool FftMagExists(const std::string& xxhash_hex);
 
+        // Pipelined FFT magnitude deduplication
+        // Queue commands with Append*, then read replies with Read* in the same order
+        void AppendFftMagExists(const std::string& xxhash_hex);
+        bool ReadExistsReply();
+
+        // Pipelined SHA-256 hash storage
+        void AppendSetHash(const std::string& hash, const std::string& timestamp);
+        void ReadSetHashReply();
+
+        void AppendSetFftMag(const std::string& xxhash_hex, const float* data, uint32_t size);
+        void ReadSetReply();
+
         // Utility
         bool Ping();
         void FlushAll();

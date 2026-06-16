@@ -20,8 +20,7 @@ namespace SignalForge {
         json::value root = json::parse(buffer.str());
 
         Config config;
-        config.max_file_size_kb     = root.at("file").at("max_file_size_kb").as_int64();
-        config.sample_rate          = root.at("file").at("sample_rate").as_int64();
+        config.sample_rate              = root.at("file").at("sample_rate").as_int64();
 
         config.sha256.batch_size        = root.at("kernels").at("sha256").at("batch_size").as_int64();
         config.sha256.threads_per_block = root.at("kernels").at("sha256").at("threads_per_block").as_int64();
@@ -54,7 +53,6 @@ namespace SignalForge {
     Config Config::Default()
     {
         Config config;
-        config.max_file_size_kb         = 2048;
         config.sample_rate              = 44100;
 
         config.sha256.batch_size        = 1024;

@@ -12,7 +12,7 @@ Run through this checklist whenever you add a feature, fix a bug, or change the 
 
 ### New features / flags
 - [ ] Add new CLI flags to the Run section (`--newFlag`)
-- [ ] Update DEVGUIDE.md with detailed usage
+- [ ] Update dev-guide.md with detailed usage
 
 ### Project structure
 - [ ] Add new folders/files to the Project Structure tree if added to repo

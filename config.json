@@ -1,6 +1,5 @@
 {
     "file": {
-        "max_file_size_kb": 2048,
         "sample_rate": 44100
     },
     "paths": {
@@ -23,7 +22,7 @@
         "reader_threads": 4
     },
     "redis": {
-        "host": "172.19.7.64",
+        "host": "localhost",
         "port": 6379,
         "db": 0
     },

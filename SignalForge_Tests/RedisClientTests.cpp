@@ -317,4 +317,95 @@ namespace SignalForge {
         EXPECT_TRUE(client.FftMagExists(xxhash));
     }
 
+    // ================================================================================
+    // RedisClientTests - Pipelined FftMag operations
+    // AppendFftMagExists/ReadExistsReply and AppendSetFftMag/ReadSetReply
+    // ================================================================================
+
+    class RedisFftMagPipelineTest : public ::testing::Test
+    {
+    protected:
+        SignalForge::RedisClient client = TestHelpers::MakeClient();
+
+        void SetUp() override
+        {
+            ASSERT_TRUE(client.Connect());
+            client.FlushAll();
+        }
+
+        void TearDown() override
+        {
+            client.FlushAll();
+            client.Disconnect();
+        }
+    };
+
+    TEST_F(RedisFftMagPipelineTest, AppendExists_ReturnsFalseForUnknownHash)
+    {
+        std::string xxhash = "ffffffffffffffff";
+
+        client.AppendFftMagExists(xxhash);
+        EXPECT_FALSE(client.ReadExistsReply());
+    }
+
+    TEST_F(RedisFftMagPipelineTest, AppendExists_ReturnsTrueAfterSet)
+    {
+        std::string xxhash = "a1b2c3d4e5f6a7b8";
+        std::vector<float> mags = { 1.0f, 2.0f, 3.0f };
+
+        client.SetFftMag(xxhash, mags.data(), mags.size());
+
+        client.AppendFftMagExists(xxhash);
+        EXPECT_TRUE(client.ReadExistsReply());
+    }
+
+    TEST_F(RedisFftMagPipelineTest, AppendSetFftMag_AndGetFftMag_RoundTrip)
+    {
+        std::string xxhash = "a1b2c3d4e5f6a7b8";
+        std::vector<float> mags = { 0.1f, 0.5f, 1.2f, 0.3f, 0.8f };
+
+        client.AppendSetFftMag(xxhash, mags.data(), mags.size());
+        client.ReadSetReply();
+
+        std::vector<float> out;
+        EXPECT_TRUE(client.GetFftMag(xxhash, out));
+
+        ASSERT_EQ(out.size(), mags.size());
+        for (size_t i = 0; i < mags.size(); i++)
+            EXPECT_FLOAT_EQ(out[i], mags[i]);
+    }
+
+    TEST_F(RedisFftMagPipelineTest, PipelinedBatch_MultipleExistsAndSets_InOrder)
+    {
+        // Pre-populate one hash so it exists, leave the other two missing
+        std::string hash_a = "aaaaaaaaaaaaaaaa";
+        std::string hash_b = "bbbbbbbbbbbbbbbb";
+        std::string hash_c = "cccccccccccccccc";
+        std::vector<float> mags = { 1.0f, 2.0f, 3.0f };
+
+        client.SetFftMag(hash_a, mags.data(), mags.size());
+
+        // Pass 1: pipeline EXISTS for all three, in order
+        client.AppendFftMagExists(hash_a);
+        client.AppendFftMagExists(hash_b);
+        client.AppendFftMagExists(hash_c);
+
+        bool exists_a = client.ReadExistsReply();
+        bool exists_b = client.ReadExistsReply();
+        bool exists_c = client.ReadExistsReply();
+
+        EXPECT_TRUE(exists_a);
+        EXPECT_FALSE(exists_b);
+        EXPECT_FALSE(exists_c);
+
+        // Pass 2: pipeline SET for the non-duplicates (b and c)
+        client.AppendSetFftMag(hash_b, mags.data(), mags.size());
+        client.AppendSetFftMag(hash_c, mags.data(), mags.size());
+        client.ReadSetReply();
+        client.ReadSetReply();
+
+        EXPECT_TRUE(client.FftMagExists(hash_b));
+        EXPECT_TRUE(client.FftMagExists(hash_c));
+    }
+
 } // namespace SignalForge

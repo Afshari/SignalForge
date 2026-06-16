@@ -12,6 +12,7 @@ RUN apt-get update && apt-get install -y \
     python3-pip \
     python3-venv \
     vim \
+    tree \
     redis-tools \
     && rm -rf /var/lib/apt/lists/*
 

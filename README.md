@@ -93,8 +93,6 @@ Config: `fft.batch_size=2048`, `sha256.batch_size=1024`, `fft_size=8192`, `reade
 
 ### Future Work
 
-**Redis write batching:** In the FFT pipeline, Redis writes account for roughly 45% of total pipeline time (~2.4s of 5.3s for 21,000 files), each write being a separate round trip. Batching writes with Redis pipelining (`MULTI`/`EXEC` or hiredis pipeline mode) could significantly reduce this overhead.
-
 **Larger file sizes:** Initial testing with 2-4MB files showed GPU starvation (high "Waiting" time) at the current batch sizes, indicating the reader/batch configuration needs retuning for larger payloads. This is included in the current benchmark dataset (2048KB group) but further tuning may improve results for even larger files.
 
 

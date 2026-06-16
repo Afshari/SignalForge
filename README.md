@@ -183,7 +183,7 @@ docker compose run signalforge
 # Windows - same flags, replace ./SignalForge with SignalForge.exe
 ```
 
-For detailed commands, Docker profiles, Redis setup, and troubleshooting → [DEVGUIDE.md](docs/DEVGUIDE.md)
+For detailed commands, Docker profiles, Redis setup, and troubleshooting → [dev-guide.md](docs/dev-guide.md)
 
 ## Configuration (`config.json`)
 

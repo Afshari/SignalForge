@@ -59,7 +59,7 @@ services:
                 count: 1
                 capabilities: [gpu]
       working_dir: /app/x64/Release
-      entrypoint: ["/app/x64/Release/SignalForge_Tests", "--gtest_filter=-PipelineTest.*"]
+      entrypoint: ["/app/x64/Release/SignalForge_Tests"]
       profiles: ["test"]
 
   shell:

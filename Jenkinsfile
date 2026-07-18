@@ -25,7 +25,9 @@ pipeline {
 
         stage('Test') {
             steps {
-                sh 'docker compose --profile test run --rm tests 2>&1 | tee test-results.log'
+                timeout(time: 5, unit: 'MINUTES') {
+                    sh 'docker compose --profile test run --rm tests 2>&1 | tee test-results.log'
+                }
             }
         }
     }

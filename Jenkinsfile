@@ -2,12 +2,17 @@ pipeline {
     agent any
 
     parameters {
-        string(
+        gitParameter(
             name: 'BRANCH',
+            type: 'PT_BRANCH',
             defaultValue: 'main',
-            description: 'Branch to build and test'
+            description: 'Select branch to build and test',
+            branchFilter: 'origin/(.*)',
+            selectedValue: 'DEFAULT',
+            sortMode: 'DESCENDING_SMART'
         )
     }
+
 
     stages {
         stage('Checkout') {
@@ -25,7 +30,9 @@ pipeline {
 
         stage('Test') {
             steps {
-                sh 'docker compose --profile test run --rm tests 2>&1 | tee test-results.log'
+                timeout(time: 5, unit: 'MINUTES') {
+                    sh 'docker compose --profile test run --rm tests 2>&1 | tee test-results.log'
+                }
             }
         }
     }

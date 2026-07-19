@@ -2,12 +2,17 @@ pipeline {
     agent any
 
     parameters {
-        string(
+        gitParameter(
             name: 'BRANCH',
+            type: 'PT_BRANCH',
             defaultValue: 'main',
-            description: 'Branch to build and test'
+            description: 'Select branch to build and test',
+            branchFilter: 'origin/(.*)',
+            selectedValue: 'DEFAULT',
+            sortMode: 'DESCENDING_SMART'
         )
     }
+
 
     stages {
         stage('Checkout') {
